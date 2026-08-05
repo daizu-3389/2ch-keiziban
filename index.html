@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名無し世界の掲示板</title>
+    <style>
+        /* 2ch全盛期のパピルス背景と無骨なテキスト */
+        body { background-color: #fafaf0; color: #000000; font-family: "MS Pゴシック", "MS PGothic", "Mona", "Noto Sans JP", sans-serif; font-size: 14px; margin: 12px; padding: 0; line-height: 1.4; }
+        a { color: #0000ff; text-decoration: underline; cursor: pointer; }
+        a:hover { color: #ff0000; }
+        
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        
+        /* テキストナビバー */
+        .nav-text { font-size: 12px; background-color: #efefef; border: 1px solid #ccc; padding: 4px 8px; margin-bottom: 15px; color: #333; }
+        
+        h1.site-title { color: #ff0000; font-size: 26px; text-align: center; margin: 0; font-weight: bold; }
+        .sub-title { font-size: 12px; text-align: center; margin-bottom: 20px; color: #000; }
+
+        /* 🔄 左右2分割レイアウト用のスタイル */
+        .split-container { display: flex; gap: 15px; margin-top: 15px; align-items: flex-start; }
+        
+        /* 📁 左側：常時表示のコンパクト板一覧（サイドバー） */
+        .sidebar-box { width: 220px; flex-shrink: 0; background-color: #efefef; border: 1px solid #ccc; padding: 10px; max-height: 85vh; overflow-y: auto; position: sticky; top: 10px; }
+        .sidebar-box .cat-title { font-weight: bold; color: #af0000; margin-top: 10px; font-size: 12px; border-bottom: 1px dashed #999; padding-bottom: 2px; }
+        .sidebar-box .cat-title:first-child { margin-top: 0; }
+        .sidebar-box .board-links-area { padding: 4px 0 4px 5px; line-height: 1.7; }
+        .sidebar-box .board-link { font-size: 12px; margin-right: 8px; display: inline-block; }
+
+        /* 📖 右側：メインコンテンツ表示エリア */
+        .main-content-box { flex-grow: 1; min-width: 0; }
+
+        /* 💬 スレッド一覧 */
+        .board-title { color: #ff0000; font-size: 20px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
+        .thread-list-box { background-color: #fff; border: 1px solid #ccc; padding: 10px; }
+        .thread-line { margin-bottom: 6px; font-size: 14px; }
+
+        /* 📖 スレッド内部（伝統のdt/dd構造） */
+        .thread-header-title { color: #ff0000; font-size: 22px; font-weight: bold; margin: 10px 0 15px 0; border-bottom: 2px solid #ff0000; padding-bottom: 3px; }
+        
+        /* レス一覧をスクロール可能にして、書き込みフォームが隠れないように調整 */
+        .posts-box { background-color: #fff; border: 1px solid #ccc; padding: 15px; max-height: 55vh; overflow-y: auto; }
+        
+        .post-group { scroll-margin-top: 40px; }
+        .post-group:target { background-color: #fff0cc; }
+
+        .post-dt { font-size: 13px; margin-top: 16px; color: #000; }
+        .post-dt b { color: #008000; } 
+        .post-id { color: #666; font-family: monospace; margin-left: 5px; }
+        .post-dd { margin-left: 25px; margin-top: 2px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-all; font-size: 14px; color: #000; }
+
+        .res-anchor { color: #0000ff; text-decoration: underline; cursor: pointer; }
+        /* 🔍 レスプレビューポップアップ */
+        #res-preview-popup {
+            display: none; position: fixed; z-index: 5000;
+            background: #fffff0; border: 1px solid #999; padding: 8px 10px;
+            max-width: 380px; min-width: 200px; font-size: 12px;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.25);
+            pointer-events: none; line-height: 1.5;
+        }
+        #res-preview-popup.visible { display: block; }
+        #res-preview-popup .rp-dt { color: #333; margin-bottom: 4px; border-bottom: 1px dashed #bbb; padding-bottom: 3px; }
+        #res-preview-popup .rp-dt b { color: #008000; }
+        #res-preview-popup .rp-dd { color: #000; white-space: pre-wrap; word-break: break-all; max-height: 180px; overflow: hidden; }
+        body.dark #res-preview-popup { background: #1e2a1e; border-color: #555; color: #ccc; }
+        body.dark #res-preview-popup .rp-dt { color: #aaa; border-color: #444; }
+        body.dark #res-preview-popup .rp-dt b { color: #66bb66; }
+        body.dark #res-preview-popup .rp-dd { color: #ccc; }
+
+        /* 📝 書き込みフォーム */
+        .form-container { background-color: #efefef; border: 1px solid #ccc; padding: 10px; margin-top: 20px; max-width: 600px; }
+        .form-container h3 { margin: 0 0 10px 0; font-size: 13px; color: #af0000; border-bottom: 1px solid #ccc; padding-bottom: 2px; }
+        .form-row { margin-bottom: 6px; }
+        .form-row label { font-size: 12px; font-weight: bold; display: inline-block; width: 90px; }
+        .form-row input[type="text"] { width: 220px; border: 1px solid #aaa; font-size: 13px; padding: 2px; background: #fff; color: #000; }
+        .form-row textarea { width: 100%; max-width: 500px; border: 1px solid #aaa; font-size: 14px; padding: 4px; font-family: inherit; background: #fff; color: #000; }
+        .btn-submit { font-size: 12px; font-weight: bold; padding: 2px 15px; cursor: pointer; background: #eee; border: 1px solid #666; color: #000; }
+        .btn-submit:hover { background: #ddd; }
+
+        /* 🔍 スレッド検索ボックス */
+        .thread-search-box { width: 100%; box-sizing: border-box; padding: 4px 8px; font-size: 13px; border: 1px solid #aaa; margin-bottom: 8px; background: #fff; color: #000; }
+        /* 🖼️ 投稿画像 */
+        .img-toggle-btn { font-size: 11px; color: #0066cc; background: none; border: 1px solid #0066cc; border-radius: 3px; padding: 1px 6px; cursor: pointer; margin-top: 4px; display: inline-block; }
+        .img-toggle-btn:hover { background: #e8f0fe; }
+        .post-img { max-width: 100%; max-height: 300px; display: none; margin-top: 4px; border: 1px solid #ccc; cursor: zoom-in; border-radius: 2px; }
+        .post-img.open { display: block; }
+        /* 🔍 ライトボックス */
+        #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
+        #lightbox.active { display: flex; }
+        #lightbox img { max-width: 95vw; max-height: 90vh; object-fit: contain; border-radius: 4px; cursor: zoom-out; }
+        #lightbox-close { position: absolute; top: 12px; right: 18px; color: #fff; font-size: 28px; cursor: pointer; line-height: 1; }
+        .res-count { font-size: 11px; color: #666; margin-left: 8px; }
+        /* 🔒 名前ロック時の見た目（灰色にして操作不可にする） */
+        input:disabled { background-color: #e0e0e0 !important; color: #666 !important; cursor: not-allowed; }
+
+        /* 📱 スマートフォン・タブレット向け最適化スタイル */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        @media (max-width: 768px) {
+            body { margin: 8px; font-size: 13px; }
+            h1.site-title { font-size: 22px; }
+            .sub-title { font-size: 11px; margin-bottom: 15px; }
+
+            /* 2分割から縦並びの1カラムレイアウトへ変更 */
+            .split-container { flex-direction: column; gap: 10px; margin-top: 10px; }
+            
+            /* 板メニューを横幅いっぱいに広げ、高さを適度に制限してスクロール可能に */
+            .sidebar-box { 
+                width: 100%; 
+                position: static; 
+                max-height: 200px; 
+                margin-bottom: 10px; 
+            }
+
+            /* メインコンテンツエリアを画面幅いっぱいに */
+            .main-content-box { width: 100%; }
+
+            /* レスのインデント（左余白）を浅くして、スマホの狭い画面を有効活用 */
+            .post-dd { margin-left: 10px; margin-top: 4px; }
+
+            /* スマホ表示時はキーボードが出て狭くなるため、レス一覧の高さを一回りコンパクトに調整 */
+            .posts-box { max-height: 35vh; }
+
+            /* 書き込みフォームのスマホ最適化（縦並びにしてタップしやすく） */
+            .form-container { width: 100%; max-width: 100%; padding: 12px; }
+            .form-row label { display: block; width: 100%; margin-bottom: 4px; font-size: 13px; }
+            .form-row input[type="text"],
+            .form-row textarea { 
+                width: 100%; 
+                max-width: 100%; 
+                font-size: 15px; 
+                padding: 6px;
+            }
+            .btn-submit { 
+                width: 100%; 
+                padding: 8px; 
+                font-size: 14px; 
+                margin-top: 5px;
+            }
+
+            /* 🛠️ 管理者部屋のスマホ表示最適化スタイル */
+            #adminView > div[style*="display: flex"] {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            #adminLogArea { height: 40vh !important; }
+            #adminAlertArea, #adminUserList { height: 25vh !important; }
+            .admin-delete-btn, .admin-warn-btn {
+                padding: 6px 12px !important;
+                font-size: 12px !important;
+                margin: 4px 2px !important;
+                display: inline-block;
+            }
+        }
+        /* 🌙 ダークモード */
+        body.dark { background-color: #1a1a1a !important; color: #d0d0d0 !important; }
+        body.dark a { color: #7799ff; }
+        body.dark a:hover { color: #ff6666; }
+        body.dark .nav-text { background-color: #2a2a2a; border-color: #444; color: #bbb; }
+        body.dark .sidebar-box { background-color: #242424; border-color: #444; }
+        body.dark .sidebar-box .cat-title { color: #ff6666; border-color: #555; }
+        body.dark .board-title { color: #ff6666; border-color: #444; }
+        body.dark .thread-list-box { background-color: #1e1e1e; border-color: #444; }
+        body.dark .posts-box { background-color: #1e1e1e; border-color: #444; }
+        body.dark .post-dt { color: #bbb; }
+        body.dark .post-dt b { color: #66bb66; }
+        body.dark .post-id { color: #888; }
+        body.dark .post-dd { color: #ccc; }
+        body.dark .post-group:target { background-color: #3a3200; }
+        body.dark .form-container { background-color: #242424; border-color: #444; }
+        body.dark .form-container h3 { color: #ff6666; border-color: #444; }
+        body.dark .form-row input[type="text"],
+        body.dark .form-row textarea,
+        body.dark .thread-search-box { background: #2e2e2e !important; color: #d0d0d0 !important; border-color: #555 !important; }
+        body.dark .btn-submit { background: #333; border-color: #666; color: #ccc; }
+        body.dark .btn-submit:hover { background: #444; }
+        body.dark .thread-header-title { color: #ff6666; border-color: #ff6666; }
+        body.dark .res-anchor { color: #7799ff; }
+        body.dark .post-img { border-color: #555; }
+        body.dark #lightbox { background: rgba(0,0,0,0.92); }
+        body.dark .img-toggle-btn { color: #7799ff; border-color: #7799ff; }
+        body.dark .img-toggle-btn:hover { background: #2a3050; }
+        .dark-mode-btn { background: #eee; color: #555; border: 1px solid #aaa; border-radius: 3px; font-size: 11px; padding: 1px 7px; cursor: pointer; margin-left: 8px; vertical-align: middle; }
+        body.dark .dark-mode-btn { background: #333; color: #ffd700; border-color: #666; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-text">
+        <a id="navHomeBtn">■板一覧（ホーム）</a> ＞ <span id="currentLocationDisplay">トップページ</span>
+        <span style="float: right;">👥 現在: <b id="onlineCount">0</b> 人 | <a id="navAdminBtn">⚙️ 管理者部屋</a><button class="dark-mode-btn" id="darkModeToggle">🌙 ダーク</button></span>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="main-container">
+        <h1 class="site-title">名無し世界の掲示板</h1>
+        <div class="sub-title">つーか、ネット of 全住民が集う、完全最軽量リアルタイム2chロビー。</div>
+
+        <div class="split-container">
+            
+            <div class="sidebar-box">
+                <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #666; border-bottom: 1px solid #ccc; padding-bottom: 2px;">📁 板メニュー</div>
+                <div id="bbsMenuArea"></div>
+            </div>
+
+            <div class="main-content-box">
+                
+                <div id="welcomeView" class="view-section active">
+                    <div style="background-color: #fff; border: 1px solid #ccc; padding: 30px; text-align: center; color: #444;">
+                        <p style="font-weight: bold; font-size: 15px; margin: 0 0 10px 0; color: #ff0000;">★ 名無し世界の掲示板へようこそ！ ★</p>
+                        <p style="margin: 0; font-size: 13px;">上側の「板メニュー」から、好きな掲示板を選択してください。</p>
+                    </div>
+                </div>
+
+                <div id="threadListView" class="view-section">
+                    <div class="board-title" id="currentBoardTitleDisplay">掲示板</div>
+                    <input type="search" id="threadSearchInput" class="thread-search-box" placeholder="🔍 スレッドを検索...">
+                    <div class="thread-list-box" id="threadList"></div>
+
+                    <div class="form-container">
+                        <h3>✨ 新しいスレッドを立てる</h3>
+                        <div class="form-row"><label>タイトル：</label><input type="text" id="newThreadTitle" placeholder="スレタイを入力"></div>
+                        <div class="form-row"><label>名前：</label><input type="text" id="threadCreatorName"><span id="threadNameLockMsg" style="font-size:11px; color:#cc0000; margin-left:8px; font-weight:bold;"></span></div>
+                        <div class="form-row"><label>内容：</label><textarea id="threadFirstMessage" rows="3" placeholder="最初の書き込み内容"></textarea></div>
+                        <div class="form-row"><label>画像：</label><input type="file" id="threadImageInput" accept="image/*" style="font-size:12px;"><span style="font-size:11px; color:#666; margin-left:4px;">3MBまで</span></div>
+                        <button class="btn-submit" id="createThreadBtn">新規スレッド作成</button>
+                    </div>
+                </div>
+
+                <div id="threadDetailView" class="view-section">
+                    <div style="margin-bottom: 10px;"><a id="backToListViewBtn" style="font-size: 13px; font-weight: bold;">[ 📂 板のスレ一覧に戻る ]</a></div>
+                    <div class="thread-header-title" id="currentThreadTitle">スレッドタイトル</div>
+                    <div class="posts-box" id="postList"></div>
+
+                    <div class="form-container">
+                        <h3>このスレッドにレスを書き込む</h3>
+                        <div class="form-row"><label>名前：</label><input type="text" id="postName"><span id="postNameLockMsg" style="font-size:11px; color:#cc0000; margin-left:8px; font-weight:bold;"></span></div>
+                        <div class="form-row"><label>本文：</label><textarea id="postMessage" rows="4" placeholder="ここに書き込むメッセージを入力"></textarea></div>
+                        <div class="form-row"><label>画像：</label><input type="file" id="postImageInput" accept="image/*" style="font-size:12px;"><span style="font-size:11px; color:#666; margin-left:4px;">3MBまで</span></div>
+                        <button class="btn-submit" id="sendPostBtn">書き込む</button>
+                    </div>
+                </div>
+
+                <div id="adminView" class="view-section">
+                    <div class="board-title" style="color: #000080; border-bottom: 2px solid #000080;">🛠️ 管理者専用 リアルタイム監視ロビー</div>
+                    
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
+                        <div style="flex: 2; min-width: 300px;">
+                            <h3 style="font-size: 13px; color: #000080; margin: 0 0 5px 0; font-weight: bold;">📋 全掲示板リアルタイムログ (全件監視中)</h3>
+                            <div id="adminLogArea" style="background: #fff; border: 1px solid #ccc; padding: 10px; height: 60vh; overflow-y: auto;"></div>
+                        </div>
+                        
+                        <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 15px;">
+                            <div>
+                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
+                                    <h3 style="font-size: 13px; color: #ff0000; margin: 0; font-weight: bold;">🚨 荒らし・NGワード検知アラート</h3>
+                                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:bold; color:#333; user-select:none;">
+                                        <div id="autoNgToggleWrap" style="position:relative; width:38px; height:20px; background:#ccc; border-radius:10px; transition:background 0.2s; flex-shrink:0;">
+                                            <div id="autoNgToggleKnob" style="position:absolute; top:2px; left:2px; width:16px; height:16px; background:#fff; border-radius:50%; transition:left 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>
+                                        </div>
+                                        <span id="autoNgToggleLabel" style="color:#999;">自動処理: OFF</span>
+                                    </label>
+                                </div>
+                                <div id="adminAlertArea" style="background: #fff0f0; border: 1px solid #ff0000; padding: 10px; height: 28vh; overflow-y: auto;"></div>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 13px; color: #333; margin: 0 0 5px 0; font-weight: bold;">👥 オンラインID一覧 (<span id="adminOnlineCount">0</span>人)</h3>
+                                <div id="adminUserList" style="background: #fff; border: 1px solid #ccc; padding: 10px; height: 28vh; overflow-y: auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 25px; border-top: 2px solid #000080; padding-top: 15px;">
+                        <h3 style="font-size: 13px; color: #000080; margin: 0 0 10px 0; font-weight: bold;">📁 板別スレッド・メッセージ全件閲覧・管理ブラウザ (巡回・一括管理用)</h3>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 180px;">
+                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #333;">1. 板を選択</div>
+                                <select id="adminBoardSelect" style="width: 100%; padding: 4px; font-size: 12px; border: 1px solid #ccc; background: #fff; color: #000;"></select>
+                            </div>
+                            <div style="flex: 1.5; min-width: 220px;">
+                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #333;">2. スレッド一覧</div>
+                                <div id="adminThreadListArea" style="background: #fff; border: 1px solid #ccc; padding: 8px; height: 35vh; overflow-y: auto; font-size: 12px;"></div>
+                            </div>
+                            <div style="flex: 2.5; min-width: 300px;">
+                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #333;">3. メッセージ全件表示 (選択スレッド内)</div>
+                                <div id="adminPostListArea" style="background: #fff; border: 1px solid #ccc; padding: 8px; height: 35vh; overflow-y: auto; font-size: 12px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, push, onValue, set, update, onDisconnect, onChildAdded, onChildRemoved, query, limitToLast, get, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // 有さんのFirebase設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyALgzyqyzbSLHX8sBCrtN5L7lNDL-c5HAM",
+            authDomain: "my-2ch-bbs.firebaseapp.com",
+            projectId: "my-2ch-bbs",
+            storageBucket: "my-2ch-bbs.firebasestorage.app",
+            messagingSenderId: "14772039514",
+            appId: "1:14772039514:web:76f3aaf1d7e02fe2a3cd63",
+            measurementId: "G-RKRMPEQKV0",
+            databaseURL: "https://my-2ch-bbs-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // ---------------------------------------------------------
+        // 🚨 【NGワードおよび荒らし対策の定義設定】
+        // ---------------------------------------------------------
+        const COOLDOWN_MS = 10000; // クールタイム 10秒
+        const MAX_LENGTH = 500;   // 文字数制限 500文字
+        
+        // 🔍 【検知範囲を大幅に拡大】表記揺れ対応を考慮した高密度NGワードマスターリスト
+        const NG_WORDS = [
+            "しね", "死ね", "ころす", "殺す", "あらし", "荒らし", 
+            "がいじ", "ガイジ", "きちがい", "キチガイ", "はげ", "ハゲ", "ばいしゅん", "売春", 
+            "さぎ", "詐欺", "えろ", "エロ", "ぱぱかつ", "パパ活", "であいけい", "出会い系", 
+            "さつがい", "殺害", "にーと", "ニート", "ごきぶり", "ゴキブリ", 
+            "ちんこ", "まんこ", "せっくす", "さっちゃん", "荒らして", "あらす", "ちん", "まん",
+            "shine", "kill", "baka", "fucking", "fuck", "stalker", "スパム", "すぱむ",
+            "ガイッ", "キチッ", "ガイ", "キチ", "池沼", "ちしょう"
+        ];
+
+        // 🛡️ どんな表記揺れ（空白、半角、カタカナ）も一網打尽にするテキスト正規化エンジン
+        function normalizeForNgCheck(str) {
+            if (!str) return "";
+            // 1. スペース、改行、タブ、および伏字に使われやすい代表的な記号をすべて消去して密着させる
+            let text = str.toLowerCase().replace(/[\s\s\t\n\r ・○●*＊_＿\-ー,、.。/／]/g, "");
+            // 2. 全角カタカナをひらがなに一括変換
+            text = text.replace(/[\u30a1-\u30f6]/g, function(match) {
+                return String.fromCharCode(match.charCodeAt(0) - 0x60);
+            });
+            // 3. 半角カタカナをひらがなに一括変換
+            const halfKanaMap = {
+                'ｱ':'あ','ｲ':'い','ｳ':'う','ｴ':'え','ｵ':'お','ｶ':'か','ｷ':'き','ｸ':'く','ｹ':'け','ｺ':'こ',
+                'ｻ':'さ','ｼ':'し','ｽ':'す','ｾ':'せ','ｿ':'そ','ﾀ':'た','ﾁ':'ち','ﾂ':'つ','ﾃ':'て','ﾄ':'と',
+                'ﾅ':'な','ﾆ':'に','ﾇ':'ぬ','ﾈ':'ね','ﾉ':'の','ﾊ':'は','ﾋ':'ひ','ﾌ':'ふ','ﾍ':'へ','ﾎ':'ほ',
+                'ﾏ':'ま','ﾐ':'み','ﾑ':'む','ﾒ':'め','ﾓ':'も','ﾔ':'や','ﾕ':'ゆ','ﾖ':'よ','ﾗ':'ら','ﾘ':'り',
+                'ﾙ':'る','ﾚ':'れ','ﾛ':'ろ','ﾜ':'わ','ｦ':'を','ﾝ':'ん',
+                'ｶﾞ':'が','ｷﾞ':'ぎ','ｸﾞ':'ぐ','ｹﾞ':'げ','ｺﾞ':'ご','ｻﾞ':'ざ','ｼﾞ':'じ','ｽﾞ':'ず','ｾﾞ':'ぜ','ｿﾞ':'ぞ',
+                'ﾀﾞ':'だ','ﾁﾞ':'ぢ','ﾂﾞ':'づ','ﾃﾞ':'で','ﾄﾞ':'ど','ﾊﾞ':'ば','ﾋﾞ':'び','ﾌﾞ':'ぶ','ﾍﾞ':'べ','ﾎﾞ':'ぼ',
+                'ﾊﾟ':'ぱ','ﾋﾟ':'ぴ','ﾌﾟ':'ぷ','ﾍﾟ':'ぺ','ﾎﾟ':'ぽ','ｯ':'っ','ｬ':'ゃ','ｭ':'ゅ','ｮ':'ょ'
+            };
+            for (let k in halfKanaMap) {
+                text = text.split(k).join(halfKanaMap[k]);
+            }
+            return text;
+        }
+
+        // バリデーション
+        function validatePost(text, title = "") {
+            const now = Date.now();
+
+            // 🚨 警告BAN チェック（30秒）
+            const warnedUntil = localStorage.getItem("bbs_warned_until");
+            if (warnedUntil && parseInt(warnedUntil) > now) {
+                const waitSec = Math.ceil((parseInt(warnedUntil) - now) / 1000);
+                alert(`⚠️ 警告を受けたため、書き込みが制限されています。\nあと ${waitSec} 秒後に書き込めます。`);
+                return false;
+            }
+
+            if (text.length > MAX_LENGTH || title.length > MAX_LENGTH) {
+                alert(`長すぎます。${MAX_LENGTH}文字以内で書いてください。`);
+                return false;
+            }
+
+            const lastPostTime = localStorage.getItem("bbs_last_post_time");
+            if (lastPostTime && (now - parseInt(lastPostTime) < COOLDOWN_MS)) {
+                const waitTime = Math.ceil((COOLDOWN_MS - (now - parseInt(lastPostTime))) / 1000);
+                alert(`連投制限中です。あと${waitTime}秒待ってね。`);
+                return false;
+            }
+            return true;
+        }
+
+        function updateLastPostTime() {
+            localStorage.setItem("bbs_last_post_time", Date.now());
+        }
+
+        function parsePostText(text) {
+            if (!text) return "";
+            let escaped = text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+            
+            return escaped.replace(/&gt;&gt;(\d+)/g, '<a class="res-anchor" data-resnum="$1">&gt;&gt;$1</a>');
+        }
+        // ---------------------------------------------------------
+
+        const BOARD_DATA = {
+            "■ 地震・速報・実況": {
+                "namazu": "緊急地震速報", "headline": "ニュース速報", "livegalileo": "なんでも実況G", "liveanb": "実況ch", "livecx": "フジテレビ実況", "livetbs": "TBS実況", "livenhk": "NHK総合実況", "liventv": "日本テレビ実況", "liveasahi": "テレビ朝日実況", "livetx": "テレビ東京実況"
+            },
+            "■ ニュース・社会事情": {
+                "newsplus": "ニュース速報＋", "mnewsplus": "芸スポ速報＋", "news4plus": "東アジアニュース＋", "dqnplus": "痛いニュース＋", "bizplus": "ビジネスニュース＋", "scienceplus": "科学ニュース＋", "wildplus": "国際ニュース＋", "shakai": "社会・世評", "justice": "裁判・司法"
+            },
+            "■ ネット機能・雑談": {
+                "vip": "ニュー速VIP", "news4vip": "ニュー速VIP+", "zatsudan": "なんでも雑談", "morning": "朝生雑談", "tomorrow": "明日があるさ", "alone": "一人でお留守番", "lobby": "ロビー", "welcome": "新機能お試し"
+            },
+            "■ ゲーム・ハード・実況": {
+                "game": "ゲーム実況", "smartphone": "スマホゲーム", "netgame": "ネトゲ実況", "hard": "ゲームハード", "retro": "レトロゲーム", "rpg": "RPG", "arc": "アーケード", "ff": "FF・DQ", "gal": "エロゲ批評", "board": "卓上ゲーム"
+            },
+            "■ アニメ・漫画・特撮": {
+                "anime": "アニメ・マンガ", "comic": "少年漫画", "rcomic": "4コマ漫画", "voice": "声優", "moe": "萌えニュース", "subcul": "サブカル", "sfx": "特撮", "illust": "イラスト・CG"
+            },
+            "■ コンピュータ・ガジェット": {
+                "pc": "PC・ガジェット", "jisaku": "自作PC", "mac": "Mac", "linux": "Linux", "iphone": "iPhone", "android": "Android", "software": "ソフトウェア", "program": "プログラミング", "network": "インターネット"
+            },
+            "■ 趣味・娯楽・オカルト": {
+                "occult": "オカルト・都市伝説", "poverty": "ニュー速(嫌儲)", "army": "軍事・ミリタリー", "rail": "鉄道", "airline": "航空・飛行機", "car": "車・バイク", "camera": "カメラ", "watch": "時計", "uranai": "占い", "survival": "サバイバル"
+            },
+            "■ スポーツ・公営ギャンブル": {
+                "baseball": "プロ野球速報", "soccer": "日本代表蹴球", "samurai": "野球日本代表", "sumo": "相撲", "basket": "バスケット", "keiba": "競馬", "kyotei": "競艇", "pachinko": "パチンコ・パチスロ"
+            },
+            "■ 芸能・音楽・映画": {
+                "idol": "地下アイドル", "akb": "AKB48", "smap": "ジャニーズ", "m芸能": "芸能人・有名人", "music": "邦楽", "musicg": "洋楽", "cinema": "映画一般", "visual": "ヴィジュアル系", "drama": "テレビドラマ"
+            },
+            "■ 学問・理数・人文": {
+                "history": "日本史", "whistory": "世界史", "physics": "物理", "math": "数学", "psy": "心理学", "gengo": "言語学", "philosophy": "哲学", "keizai": "経済学", "space": "宇宙・天文学"
+            },
+            "■ 生活・家庭・美容": {
+                "cook": "料理・レシピ", "kankon": "冠婚葬祭", "baby": "育児・子育て", "kaden": "家電製品", "interior": "インテリア", "diet": "ダイエット", "mensbeauty": "メンズ美容", "fashion": "洋服・ファッション"
+            },
+            "■ 人生・メンタル・コミュニティ": {
+                "lonely": "ぼっち・馴れ合い", "mental": "メンタルヘルス", "meikyu": "人生相談", "debt": "借金・生活苦", "job": "転職・就職", "part": "アルバイト", "shikaku": "資格全全", "jinsei": "生き方・人生"
+            },
+            "■ 各地・地域ローカル": {
+                "hokkaido": "北海道", "tohoku": "東北", "tokyo": "東京", "kanagawa": "神奈川", "tokai": "東海", "kinki": "近畿", "osaka": "大阪", "chugoku": "中国地方", "shikoku": "四重", "kyushu": "九州"
+            }
+        };
+
+        const ALL_BOARDS = {};
+        for (let cat in BOARD_DATA) {
+            for (let id in BOARD_DATA[cat]) { ALL_BOARDS[id] = BOARD_DATA[cat][id]; }
+        }
+
+        const bbsMenuArea = document.getElementById("bbsMenuArea");
+        const welcomeView = document.getElementById("welcomeView");
+        const threadListView = document.getElementById("threadListView");
+        const threadDetailView = document.getElementById("threadDetailView");
+        const adminView = document.getElementById("adminView");
+
+        const navHomeBtn = document.getElementById("navHomeBtn");
+        const navAdminBtn = document.getElementById("navAdminBtn");
+        const currentLocationDisplay = document.getElementById("currentLocationDisplay");
+        const currentBoardTitleDisplay = document.getElementById("currentBoardTitleDisplay");
+        const threadList = document.getElementById("threadList");
+        const postList = document.getElementById("postList");
+        const currentThreadTitle = document.getElementById("currentThreadTitle");
+        const newThreadTitleInput = document.getElementById("newThreadTitle");
+        const threadCreatorNameInput = document.getElementById("threadCreatorName");
+        const threadFirstMessageInput = document.getElementById("threadFirstMessage");
+        const createThreadBtn = document.getElementById("createThreadBtn");
+        const postNameInput = document.getElementById("postName");
+        const postMessageInput = document.getElementById("postMessage");
+        const sendPostBtn = document.getElementById("sendPostBtn");
+        const backToListViewBtn = document.getElementById("backToListViewBtn");
+
+        let currentBoardId = ""; 
+        let currentThreadId = null;
+        let threadUnsubscribe = null;
+        let postUnsubscribe = null;
+
+        // 👥 リアルタイム同時接続
+        const myUid = getTodayID();
+        const myPresenceRef = ref(database, 'presence/' + myUid);
+        const connectedRef = ref(database, ".info/connected");
+
+        onValue(connectedRef, (snapshot) => {
+            if (snapshot.val() === true) {
+                set(myPresenceRef, { uid: myUid, lastActive: Date.now() });
+                onDisconnect(myPresenceRef).remove();
+            }
+        });
+
+        const presenceRef = ref(database, 'presence');
+        onValue(presenceRef, (snapshot) => {
+            const data = snapshot.val();
+            const count = data ? Object.keys(data).length : 0;
+            
+            document.getElementById("onlineCount").textContent = count;
+            const adminOnlineCount = document.getElementById("adminOnlineCount");
+            const adminUserList = document.getElementById("adminUserList");
+            
+            if (adminOnlineCount && adminUserList) {
+                adminOnlineCount.textContent = count;
+                adminUserList.innerHTML = "";
+                if (data) {
+                    for (let id in data) {
+                        const div = document.createElement("div");
+                        div.style.fontSize = "12px";
+                        div.style.padding = "2px 0";
+                        div.innerHTML = `・ID: <span style="font-family:monospace;font-weight:bold;color:#008000;">${id}</span> ${id === myUid ? '<span style="color:#666;">(あなた)</span>' : ''}`;
+                        adminUserList.appendChild(div);
+                    }
+                } else {
+                    adminUserList.innerHTML = "<div style='color:#666;'>誰もいません</div>";
+                }
+            }
+        });
+
+        // 👑 管理者からの警告リアルタイム受信
+        const myWarningRef = ref(database, 'warnings/' + myUid);
+        onValue(myWarningRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                if (Date.now() - data.timestamp < 60000) {
+                    const banUntil = Date.now() + 30000;
+                    localStorage.setItem("bbs_warned_until", banUntil);
+                    alert(`🚨【管理者からの警告通知】🚨\n\n${data.message}\n\n⏱️ この通知を受け取ったため、30秒間は書き込みができません。`);
+                    set(myWarningRef, null);
+                }
+            }
+        });
+
+        // 🔒 名前の一時ロック・管理機能（24時間制限）
+        function checkNameLock() {
+            const lockUntil = localStorage.getItem("bbs_name_lock_until");
+            const lockedName = localStorage.getItem("bbs_locked_username");
+            const now = Date.now();
+            const threadLockMsg = document.getElementById("threadNameLockMsg");
+            const postLockMsg = document.getElementById("postNameLockMsg");
+
+            if (lockUntil && parseInt(lockUntil) > now) {
+                threadCreatorNameInput.value = lockedName;
+                postNameInput.value = lockedName;
+                threadCreatorNameInput.disabled = true;
+                postNameInput.disabled = true;
+
+                const remainingMs = parseInt(lockUntil) - now;
+                const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+                const remainingMins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                const lockLabel = `🔒 あと${remainingHours}時間${remainingMins}分変更不可`;
+                threadCreatorNameInput.title = lockLabel;
+                postNameInput.title = lockLabel;
+                if (threadLockMsg) threadLockMsg.textContent = lockLabel;
+                if (postLockMsg) postLockMsg.textContent = lockLabel;
+            } else {
+                threadCreatorNameInput.disabled = false;
+                postNameInput.disabled = false;
+                if (threadLockMsg) threadLockMsg.textContent = "";
+                if (postLockMsg) postLockMsg.textContent = "";
+                if (lockUntil) {
+                    localStorage.removeItem("bbs_name_lock_until");
+                    localStorage.removeItem("bbs_locked_username");
+                }
+                const savedName = localStorage.getItem("bbs_saved_username") || "名無しさん";
+                threadCreatorNameInput.value = savedName;
+                postNameInput.value = savedName;
+            }
+        }
+
+        // 1分ごとにロック残り時間を更新
+        setInterval(checkNameLock, 60000);
+
+        function lockName(name) {
+            const lockUntil = localStorage.getItem("bbs_name_lock_until");
+            if (lockUntil && parseInt(lockUntil) > Date.now()) return;
+
+            const nominatedName = name.trim() || "名無しさん";
+            const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+            
+            localStorage.setItem("bbs_name_lock_until", Date.now() + TWENTY_FOUR_HOURS);
+            localStorage.setItem("bbs_locked_username", nominatedName);
+            localStorage.setItem("bbs_saved_username", nominatedName);
+            checkNameLock();
+        }
+
+        function saveName(name) {
+            if (threadCreatorNameInput.disabled) return;
+            localStorage.setItem("bbs_saved_username", name);
+            threadCreatorNameInput.value = name;
+            postNameInput.value = name;
+        }
+
+        threadCreatorNameInput.addEventListener("input", (e) => saveName(e.target.value));
+        postNameInput.addEventListener("input", (e) => saveName(e.target.value));
+        
+        checkNameLock();
+
+        function getTodayID() {
+            let userKey = localStorage.getItem("bbs_user_secret_key");
+            if (!userKey) {
+                userKey = Math.random().toString(36).substring(2, 10);
+                localStorage.setItem("bbs_user_secret_key", userKey);
+            }
+            const now = new Date();
+            const mix = userKey + `${now.getFullYear()}${now.getMonth()+1}${now.getDate()}`;
+            let hash = 0;
+            for (let i = 0; i < mix.length; i++) { hash = (hash << 5) - hash + mix.charCodeAt(i); hash |= 0; }
+            return Math.abs(hash).toString(36).substring(0, 8).toUpperCase();
+        }
+
+        function getNowString() {
+            const now = new Date();
+            const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+            return `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')}(${weekdays[now.getDay()]}) ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+        }
+
+        function renderBbsMenu() {
+            bbsMenuArea.innerHTML = "";
+            for (let categoryName in BOARD_DATA) {
+                const catTitle = document.createElement("div");
+                catTitle.className = "cat-title";
+                catTitle.textContent = categoryName;
+                bbsMenuArea.appendChild(catTitle);
+                
+                const linksWrapper = document.createElement("div");
+                linksWrapper.className = "board-links-area";
+                
+                for (let boardId in BOARD_DATA[categoryName]) {
+                    const boardName = BOARD_DATA[categoryName][boardId];
+                    const a = document.createElement("a");
+                    a.className = "board-link";
+                    a.textContent = boardName;
+                    a.style.cursor = "pointer";
+                    a.addEventListener("click", () => switchBoard(boardId));
+                    linksWrapper.appendChild(a);
+                    linksWrapper.appendChild(document.createTextNode(" "));
+                }
+                bbsMenuArea.appendChild(linksWrapper);
+            }
+        }
+
+        function switchBoard(boardId) {
+            currentBoardId = boardId;
+            currentLocationDisplay.textContent = ALL_BOARDS[boardId];
+            currentBoardTitleDisplay.textContent = `📂 ${ALL_BOARDS[boardId]} のスレッド一覧`;
+            
+            welcomeView.classList.remove("active");
+            threadDetailView.classList.remove("active");
+            adminView.classList.remove("active");
+            threadListView.classList.add("active");
+            loadThreadList(boardId);
+        }
+
+        navHomeBtn.addEventListener("click", () => {
+            if (threadUnsubscribe) threadUnsubscribe();
+            if (postUnsubscribe) postUnsubscribe();
+            currentThreadId = null;
+            currentLocationDisplay.textContent = "トップページ";
+            threadListView.classList.remove("active");
+            threadDetailView.classList.remove("active");
+            adminView.classList.remove("active");
+            welcomeView.classList.add("active");
+        });
+
+        let allThreadData = {}; // 検索フィルタ用キャッシュ
+        let currentSearchBoardId = "";
+
+        function renderThreadList(data, filter) {
+            threadList.innerHTML = "";
+            if (!data || Object.keys(data).length === 0) {
+                threadList.innerHTML = "<div style='color:#666; font-size:12px;'>スレッドがありません。</div>";
+                return;
+            }
+            const kw = filter ? filter.toLowerCase() : "";
+            let index = 1;
+            for (let id in data) {
+                const thread = data[id];
+                if (kw && !thread.title.toLowerCase().includes(kw)) { index++; continue; }
+                const div = document.createElement("div");
+                div.className = "thread-line";
+
+                const a = document.createElement("a");
+                a.textContent = thread.title;
+                a.style.cursor = "pointer";
+                a.addEventListener("click", () => openThread(id, thread.title));
+
+                const countSpan = document.createElement("span");
+                countSpan.className = "res-count";
+                countSpan.textContent = thread.replyCount ? `[${thread.replyCount}res]` : "[1res]";
+
+                div.appendChild(document.createTextNode(`${index}: `));
+                div.appendChild(a);
+                div.appendChild(countSpan);
+                threadList.appendChild(div);
+                index++;
+            }
+            if (threadList.innerHTML === "") {
+                threadList.innerHTML = "<div style='color:#666; font-size:12px;'>該当するスレッドがありません。</div>";
+            }
+        }
+
+        function loadThreadList(boardId) {
+            if (threadUnsubscribe) threadUnsubscribe();
+            currentSearchBoardId = boardId;
+            threadList.innerHTML = "<div style='color:#666; font-size:12px;'>読み込み中...</div>";
+            const searchInput = document.getElementById("threadSearchInput");
+            if (searchInput) searchInput.value = "";
+            const threadsRef = ref(database, 'threads/' + boardId);
+            threadUnsubscribe = onValue(threadsRef, (snapshot) => {
+                allThreadData = snapshot.val() || {};
+                const kw = searchInput ? searchInput.value : "";
+                renderThreadList(allThreadData, kw);
+            });
+        }
+
+        // 検索入力イベント
+        document.getElementById("threadSearchInput").addEventListener("input", (e) => {
+            renderThreadList(allThreadData, e.target.value);
+        });
+
+        // 🌙 ダークモード
+        const darkModeToggleBtn = document.getElementById("darkModeToggle");
+        const applyDark = (on) => {
+            document.body.classList.toggle("dark", on);
+            darkModeToggleBtn.textContent = on ? "☀️ ライト" : "🌙 ダーク";
+        };
+        applyDark(localStorage.getItem("bbs_dark") === "1");
+        darkModeToggleBtn.addEventListener("click", () => {
+            const next = !document.body.classList.contains("dark");
+            localStorage.setItem("bbs_dark", next ? "1" : "0");
+            applyDark(next);
+        });
+
+        // 💬 レスプレビューポップアップ
+        const resPopup = document.getElementById("res-preview-popup");
+        const rpDt = document.getElementById("rp-dt-content");
+        const rpDd = document.getElementById("rp-dd-content");
+
+        document.addEventListener("click", (e) => {
+            const anchor = e.target.closest(".res-anchor");
+            if (anchor) {
+                e.preventDefault();
+                const num = parseInt(anchor.getAttribute("data-resnum"), 10);
+                const post = postPreviewMap[num];
+                if (!post) { resPopup.classList.remove("visible"); return; }
+                rpDt.innerHTML = `>>` + num + ` &nbsp; ` + post.dt;
+                rpDd.textContent = post.dd;
+                // 画面端に収まるよう位置調整
+                const vw = window.innerWidth, vh = window.innerHeight;
+                let x = e.clientX + 12, y = e.clientY + 12;
+                resPopup.classList.add("visible");
+                const pw = resPopup.offsetWidth, ph = resPopup.offsetHeight;
+                if (x + pw > vw - 8) x = vw - pw - 8;
+                if (y + ph > vh - 8) y = vh - ph - 8;
+                if (x < 4) x = 4;
+                if (y < 4) y = 4;
+                resPopup.style.left = x + "px";
+                resPopup.style.top = y + "px";
+            } else {
+                resPopup.classList.remove("visible");
+            }
+        });
+
+        // 🔍 ライトボックス
+        const lightbox = document.getElementById("lightbox");
+        const lightboxImg = document.getElementById("lightbox-img");
+        const lightboxClose = document.getElementById("lightbox-close");
+
+        function openLightbox(src) {
+            lightboxImg.src = src;
+            lightbox.classList.add("active");
+        }
+        lightboxClose.onclick = () => lightbox.classList.remove("active");
+        lightbox.onclick = (e) => { if (e.target === lightbox || e.target === lightboxImg) lightbox.classList.remove("active"); };
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") lightbox.classList.remove("active"); });
+
+        // 🖼️ 画像ファイル → base64 変換（3MB制限）
+        function readImageFile(fileInput) {
+            return new Promise((resolve) => {
+                const file = fileInput.files[0];
+                if (!file) return resolve(null);
+                if (file.size > 3 * 1024 * 1024) {
+                    alert("画像は3MB以下にしてください。");
+                    fileInput.value = "";
+                    return resolve(null);
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 💬 レスプレビュー用マップ（スレッドを開くたびにリセット）
+        let postPreviewMap = {};
+
+        function openThread(threadId, threadTitle) {
+            postPreviewMap = {};
+            currentThreadId = threadId;
+            currentThreadTitle.textContent = threadTitle;
+            currentLocationDisplay.textContent = threadTitle;
+            threadListView.classList.remove("active");
+            adminView.classList.remove("active");
+            threadDetailView.classList.add("active");
+            
+            if (postUnsubscribe) postUnsubscribe();
+            postList.innerHTML = "<div style='color:#666; font-size:12px;'>読み込み中...</div>";
+            const postsRef = ref(database, 'posts/' + threadId);
+            postUnsubscribe = onValue(postsRef, (snapshot) => {
+                postList.innerHTML = "";
+                const data = snapshot.val();
+                if (data) {
+                    let count = 1;
+                    for (let id in data) {
+                        const post = data[id];
+                        
+                        const postGroup = document.createElement("div");
+                        postGroup.className = "post-group";
+                        postGroup.id = `post-${count}`;
+
+                        const dt = document.createElement("div");
+                        dt.className = "post-dt";
+                        dt.innerHTML = `${count} ：<b>${post.name}</b> ：${post.time} <span class="post-id">${post.uid ? 'ID:'+post.uid : 'ID:???'}</span>`;
+                        
+                        const dd = document.createElement("div");
+                        dd.className = "post-dd";
+                        dd.innerHTML = parsePostText(post.text);
+
+                        postGroup.appendChild(dt);
+                        postGroup.appendChild(dd);
+
+                        if (post.imageData) {
+                            const toggleBtn = document.createElement("span");
+                            toggleBtn.className = "img-toggle-btn";
+                            toggleBtn.textContent = "画像を展開";
+                            const img = document.createElement("img");
+                            img.src = post.imageData;
+                            img.className = "post-img";
+                            img.onclick = () => openLightbox(post.imageData);
+                            toggleBtn.onclick = () => {
+                                const isOpen = img.classList.toggle("open");
+                                toggleBtn.textContent = isOpen ? "閉じる" : "画像を展開";
+                            };
+                            postGroup.appendChild(toggleBtn);
+                            postGroup.appendChild(img);
+                        }
+
+                        postList.appendChild(postGroup);
+                        postPreviewMap[count] = {
+                            dt: `<b>${post.name || '名無しさん'}</b> ${post.time || ''} <span style="font-family:monospace;font-size:11px;">${post.uid || ''}</span>`,
+                            dd: post.text || ''
+                        };
+                        count++;
+                    }
+                }
+            });
+        }
+
+        backToListViewBtn.addEventListener("click", () => {
+            threadDetailView.classList.remove("active");
+            adminView.classList.remove("active");
+            threadListView.classList.add("active");
+            currentLocationDisplay.textContent = ALL_BOARDS[currentBoardId];
+            if (postUnsubscribe) postUnsubscribe();
+            currentThreadId = null;
+        });
+
+        // ✨ スレッド新規作成
+        createThreadBtn.addEventListener("click", () => {
+            const title = newThreadTitleInput.value.trim();
+            const name = threadCreatorNameInput.value.trim() || "名無しさん";
+            const firstMsg = threadFirstMessageInput.value.trim();
+            
+            if (!title || !firstMsg) return alert("タイトルと内容を入力してね");
+            if (!validatePost(firstMsg, title)) return;
+
+            const timeStr = getNowString();
+            const userId = getTodayID();
+            const boardThreadsRef = ref(database, 'threads/' + currentBoardId);
+            const newThreadRef = push(boardThreadsRef);
+            const newThreadId = newThreadRef.key;
+            
+            // 🚨 強力な正規化を通した高度なNGワード自動チェック
+            const normalizedTitle = normalizeForNgCheck(title);
+            const normalizedMsg = normalizeForNgCheck(firstMsg);
+            const hasNgWord = NG_WORDS.some(word => normalizedTitle.includes(word) || normalizedMsg.includes(word));
+
+            const threadImgInput = document.getElementById("threadImageInput");
+            readImageFile(threadImgInput).then(imgData => {
+
+            set(newThreadRef, { title: title, createdAt: timeStr, replyCount: 1 }).then(() => {
+                const newPostRef = push(ref(database, 'posts/' + newThreadId));
+                const postKey = newPostRef.key;
+                const postData = { name: name, text: firstMsg, time: timeStr, uid: userId };
+                if (imgData) postData.imageData = imgData;
+
+                set(newPostRef, postData).then(() => {
+                    push(ref(database, 'global_logs'), {
+                        boardId: currentBoardId,
+                        boardName: ALL_BOARDS[currentBoardId],
+                        threadId: newThreadId,
+                        postKey: postKey,
+                        threadTitle: title,
+                        name: name,
+                        text: firstMsg,
+                        time: timeStr,
+                        uid: userId,
+                        type: "新規スレッド",
+                        timestamp: Date.now(),
+                        hasNgWord: hasNgWord
+                    });
+                });
+
+                lockName(name);
+                updateLastPostTime();
+                
+                newThreadTitleInput.value = "";
+                threadFirstMessageInput.value = "";
+                if (threadImgInput) threadImgInput.value = "";
+                openThread(newThreadId, title);
+            });
+
+            }); // readImageFile
+        });
+
+        // 💬 レス書き込み
+        sendPostBtn.addEventListener("click", () => {
+            const name = postNameInput.value.trim() || "名無しさん";
+            const text = postMessageInput.value.trim();
+            
+            if (!text) return alert("本文を入力してください");
+            if (!validatePost(text)) return;
+            
+            const timeStr = getNowString();
+            const userId = getTodayID();
+
+            const postImgInput = document.getElementById("postImageInput");
+            readImageFile(postImgInput).then(imgData => {
+
+            const newPostRef = push(ref(database, 'posts/' + currentThreadId));
+            const postKey = newPostRef.key;
+
+            // 🚨 強力な正規化を通した高度なNGワード自動チェック
+            const normalizedText = normalizeForNgCheck(text);
+            const hasNgWord = NG_WORDS.some(word => normalizedText.includes(word));
+
+            const postData = { name: name, text: text, time: timeStr, uid: userId };
+            if (imgData) postData.imageData = imgData;
+
+            set(newPostRef, postData).then(() => {
+                push(ref(database, 'global_logs'), {
+                    boardId: currentBoardId,
+                    boardName: ALL_BOARDS[currentBoardId],
+                    threadId: currentThreadId,
+                    postKey: postKey,
+                    threadTitle: currentThreadTitle.textContent,
+                    name: name,
+                    text: text,
+                    time: timeStr,
+                    uid: userId,
+                    type: "レス",
+                    timestamp: Date.now(),
+                    hasNgWord: hasNgWord
+                });
+
+                lockName(name);
+                updateLastPostTime();
+                postMessageInput.value = "";
+                if (postImgInput) postImgInput.value = "";
+                // レス数カウントアップ
+                update(ref(database, 'threads/' + currentBoardId + '/' + currentThreadId), { replyCount: increment(1) });
+            });
+
+            }); // readImageFile
+        });
+
+        // ---------------------------------------------------------
+        // 🛠️ 【管理者部屋のシステム（監視・荒らし自動検出）】
+        // ---------------------------------------------------------
+        let isAdminAuthenticated = false;
+        let lastPostsByUid = {}; 
+        let adminListeners = []; 
+
+        navAdminBtn.addEventListener("click", () => {
+            if (!isAdminAuthenticated) {
+                const pass = prompt("管理者パスワードを入力してください：");
+                if (pass === "hagekasuisibasi427") {
+                    isAdminAuthenticated = true;
+                    alert("認証成功。管理者監視ロビーを開きます。");
+                } else {
+                    alert("パスワードが間違っています。");
+                    return;
+                }
+            }
+
+            welcomeView.classList.remove("active");
+            threadListView.classList.remove("active");
+            threadDetailView.classList.remove("active");
+            adminView.classList.add("active");
+            currentLocationDisplay.textContent = "管理者専用部屋";
+
+            startAdminMonitor();
+        });
+
+        function playWarningSound() {
+            try {
+                const context = new (window.AudioContext || window.webkitAudioContext)();
+                
+                let osc1 = context.createOscillator();
+                osc1.type = "sine";
+                osc1.frequency.setValueAtTime(660, context.currentTime);
+                osc1.connect(context.destination);
+                osc1.start();
+                osc1.stop(context.currentTime + 0.1);
+
+                setTimeout(() => {
+                    let osc2 = context.createOscillator();
+                    osc2.type = "sine";
+                    osc2.frequency.setValueAtTime(660, context.currentTime);
+                    osc2.connect(context.destination);
+                    osc2.start();
+                    osc2.stop(context.currentTime + 0.1);
+                }, 150);
+            } catch (e) {
+                console.log("AudioContext エラー:", e);
+            }
+        }
+
+        // 🔀 NGワード自動処理トグルスイッチの初期化
+        window.autoNgMode = localStorage.getItem("bbs_admin_auto_ng") === "true";
+
+        function applyAutoNgToggleUI() {
+            const wrap = document.getElementById("autoNgToggleWrap");
+            const knob = document.getElementById("autoNgToggleKnob");
+            const label = document.getElementById("autoNgToggleLabel");
+            if (!wrap) return;
+            if (window.autoNgMode) {
+                wrap.style.background = "#cc0000";
+                knob.style.left = "20px";
+                label.textContent = "自動処理: ON";
+                label.style.color = "#cc0000";
+            } else {
+                wrap.style.background = "#ccc";
+                knob.style.left = "2px";
+                label.textContent = "自動処理: OFF";
+                label.style.color = "#999";
+            }
+        }
+
+        document.getElementById("autoNgToggleWrap").addEventListener("click", () => {
+            window.autoNgMode = !window.autoNgMode;
+            localStorage.setItem("bbs_admin_auto_ng", window.autoNgMode);
+            applyAutoNgToggleUI();
+        });
+
+        applyAutoNgToggleUI();
+
+        // 📱 PC・スマホ双方で完璧に作動する、削除・警告の直結型高速ハンドラエンジン
+        window.adminDeleteHandler = function(btn) {
+            const boardId = btn.getAttribute("data-board");
+            const threadId = btn.getAttribute("data-thread");
+            const postKey = btn.getAttribute("data-post");
+            const logKey = btn.getAttribute("data-logkey");
+            const isThread = btn.getAttribute("data-is-thread") === "true";
+
+            if (isThread) {
+                if (confirm("【⚠️警告⚠️】\n本当にこのスレッドを『丸ごと削除』しますか？\nスレッド内の全メッセージが完全に消去され元に戻せません。")) {
+                    if (boardId && threadId) {
+                        set(ref(database, 'threads/' + boardId + '/' + threadId), null);
+                        set(ref(database, 'posts/' + threadId), null);
+                        if (logKey) set(ref(database, 'global_logs/' + logKey), null);
+                        alert("スレッドを丸ごと完全削除しました。");
+                        const adminPostListArea = document.getElementById("adminPostListArea");
+                        if (adminPostListArea) {
+                            adminPostListArea.innerHTML = "<div style='color:#666; font-style:italic;'>スレッドを選択するとメッセージ一覧が表示されます。</div>";
+                        }
+                    }
+                }
+            } else {
+                if (confirm("本当にこのメッセージを削除しますか？\n（データベースから完全に消去され、一般画面にもリアルタイムに反映されます）")) {
+                    if (threadId && postKey) {
+                        set(ref(database, 'posts/' + threadId + '/' + postKey), null);
+                    }
+                    if (logKey) {
+                        set(ref(database, 'global_logs/' + logKey), null);
+                    }
+                    alert("該当のメッセージを削除しました。");
+                }
+            }
+        };
+
+        window.adminDeleteImageHandler = function(btn) {
+            const threadId = btn.getAttribute("data-thread");
+            const postKey = btn.getAttribute("data-post");
+            if (!threadId || !postKey) return;
+            if (confirm("この投稿の画像だけを削除しますか？\n（テキスト本文は残ります）")) {
+                set(ref(database, 'posts/' + threadId + '/' + postKey + '/imageData'), null)
+                    .then(() => {
+                        alert("画像を削除しました。");
+                        btn.disabled = true;
+                        btn.textContent = "（削除済み）";
+                        btn.style.color = "#999";
+                    });
+            }
+        };
+
+        window.adminWarnHandler = function(btn) {
+            const uid = btn.getAttribute("data-uid");
+            if (!uid) return;
+
+            const warnMsg = prompt(`送信者(ID: ${uid})への警告メッセージ内容を入力してください：`, "不適切な発言（NGワードなど）が検出されました。掲示板のルールを守って書き込みを行ってください。");
+            if (warnMsg) {
+                set(ref(database, 'warnings/' + uid), {
+                    message: warnMsg,
+                    timestamp: Date.now()
+                }).then(() => {
+                    alert("対象ユーザーへのリアルタイム警告シグナルを送信しました。");
+                });
+            }
+        };
+
+        function startAdminMonitor() {
+            if (adminListeners.length > 0) return; 
+
+            const adminLogArea = document.getElementById("adminLogArea");
+            const adminAlertArea = document.getElementById("adminAlertArea");
+
+            adminLogArea.innerHTML = "<div style='color:#666;'>リアルタイムログの読み込みを開始しました...</div>";
+            adminAlertArea.innerHTML = "<div style='color:#666; font-size:12px;'>アラート履歴はありません</div>";
+
+            const globalLogsRef = ref(database, 'global_logs');
+            const logsQuery = query(globalLogsRef, limitToLast(100)); 
+
+            const unsubLogAdded = onChildAdded(logsQuery, (snapshot) => {
+                const logKey = snapshot.key; 
+                const log = snapshot.val();
+                if (!log) return;
+
+                if (adminLogArea.innerHTML.includes("リアルタイムログの読み込みを開始しました...")) {
+                    adminLogArea.innerHTML = "";
+                }
+
+                const uniqueId = `${log.threadId}_${log.postKey}`;
+                const hasNgWord = log.hasNgWord;
+                const isThreadType = log.type === "新規スレッド"; 
+                let logTimestamp = log.timestamp || Date.now();
+
+                const now = Date.now();
+                const isRecentLog = (now - logTimestamp) < 30000; 
+                
+                // 連投検出アラート
+                if (lastPostsByUid[log.uid]) {
+                    const prevPost = lastPostsByUid[log.uid];
+                    const timeDiff = logTimestamp - prevPost.timestamp;
+                    
+                    if (timeDiff >= 0 && timeDiff < 4000) { 
+                        if (adminAlertArea.innerHTML.includes("アラート履歴はありません")) {
+                            adminAlertArea.innerHTML = "";
+                        }
+                        
+                        if (!document.getElementById(`admin-alert-${uniqueId}`)) {
+                            const alertDiv = document.createElement("div");
+                            alertDiv.id = `admin-alert-${uniqueId}`;
+                            alertDiv.style.backgroundColor = "#fff";
+                            alertDiv.style.border = "1px solid #ff0000";
+                            alertDiv.style.padding = "6px";
+                            alertDiv.style.marginBottom = "5px";
+                            alertDiv.style.fontSize = "12px";
+                            alertDiv.innerHTML = `
+                                <b style="color:red;">⚠️連投検出 (${Math.ceil(timeDiff/1000)}秒間隔)</b><br>
+                                <b>ID:</b> <span style="font-family:monospace;">${log.uid}</span> | <b>名前:</b> ${log.name}<br>
+                                <b>場所:</b> ${log.boardName} ＞ ${log.threadTitle}<br>
+                                <b>内容:</b> <span style="color:#555;">${log.text.substring(0, 40)}${log.text.length > 40 ? '...' : ''}</span>
+                                <div style="margin-top: 5px;">
+                                    <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${log.boardId}" data-thread="${log.threadId}" data-post="${log.postKey}" data-logkey="${logKey}" data-is-thread="${isThreadType}" style="color:red; font-weight:bold; cursor:pointer; font-size:11px;">${isThreadType ? '🗑️ スレッドごと削除' : '🗑️ メッセージ削除'}</button>
+                                    <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${log.uid}" style="color:orange; font-weight:bold; cursor:pointer; font-size:11px; margin-left:10px;">⚠️ 送信者へ警告</button>
+                                </div>
+                            `;
+                            adminAlertArea.insertBefore(alertDiv, adminAlertArea.firstChild);
+
+                            if (isRecentLog) playWarningSound();
+                        }
+                    }
+                }
+
+                // NGワード検出アラート
+                if (hasNgWord) {
+                    if (adminAlertArea.innerHTML.includes("アラート履歴はありません")) {
+                        adminAlertArea.innerHTML = "";
+                    }
+                    if (!document.getElementById(`admin-alert-ng-${uniqueId}`)) {
+                        // 🤖 自動処理モードの場合は即時削除＋警告
+                        if (window.autoNgMode && isRecentLog) {
+                            if (log.threadId && log.postKey) {
+                                set(ref(database, 'posts/' + log.threadId + '/' + log.postKey), null);
+                            }
+                            if (logKey) set(ref(database, 'global_logs/' + logKey), null);
+                            if (log.uid) {
+                                set(ref(database, 'warnings/' + log.uid), {
+                                    message: "NGワードを含む書き込みが自動検出・削除されました。掲示板のルールを守って書き込みを行ってください。",
+                                    timestamp: Date.now()
+                                });
+                            }
+                            const alertDiv = document.createElement("div");
+                            alertDiv.id = `admin-alert-ng-${uniqueId}`;
+                            alertDiv.style.backgroundColor = "#f0fff0";
+                            alertDiv.style.border = "2px solid #00aa00";
+                            alertDiv.style.padding = "6px";
+                            alertDiv.style.marginBottom = "5px";
+                            alertDiv.style.fontSize = "12px";
+                            alertDiv.innerHTML = `
+                                <b style="color:#008000;">✅ 自動処理完了</b><br>
+                                <b>ID:</b> <span style="font-family:monospace;">${log.uid}</span> | <b>名前:</b> ${log.name}<br>
+                                <b>場所:</b> ${log.boardName} ＞ ${log.threadTitle}<br>
+                                <b>内容:</b> <span style="color:#b30000;">${log.text}</span><br>
+                                <span style="color:#008000; font-size:11px;">🗑️ 自動削除済み ／ ⚠️ 警告送信済み</span>
+                            `;
+                            adminAlertArea.insertBefore(alertDiv, adminAlertArea.firstChild);
+                        } else {
+                            // 手動モード：ボタンを表示
+                            const alertDiv = document.createElement("div");
+                            alertDiv.id = `admin-alert-ng-${uniqueId}`;
+                            alertDiv.style.backgroundColor = "#fff5f5";
+                            alertDiv.style.border = "2px solid #ff0000";
+                            alertDiv.style.padding = "6px";
+                            alertDiv.style.marginBottom = "5px";
+                            alertDiv.style.fontSize = "12px";
+                            alertDiv.innerHTML = `
+                                <b style="color:red;">🚨 NGワード検出</b><br>
+                                <b>ID:</b> <span style="font-family:monospace;">${log.uid}</span> | <b>名前:</b> ${log.name}<br>
+                                <b>場所:</b> ${log.boardName} ＞ ${log.threadTitle}<br>
+                                <b>内容:</b> <span style="color:#b30000; font-weight:bold;">${log.text}</span>
+                                <div style="margin-top: 5px;">
+                                    <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${log.boardId}" data-thread="${log.threadId}" data-post="${log.postKey}" data-logkey="${logKey}" data-is-thread="${isThreadType}" style="color:red; font-weight:bold; cursor:pointer; font-size:11px;">${isThreadType ? '🗑️ スレッドごと削除' : '🗑️ メッセージ削除'}</button>
+                                    <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${log.uid}" style="color:orange; font-weight:bold; cursor:pointer; font-size:11px; margin-left:10px;">⚠️ 送信者へ警告</button>
+                                </div>
+                            `;
+                            adminAlertArea.insertBefore(alertDiv, adminAlertArea.firstChild);
+                        }
+
+                        if (isRecentLog) playWarningSound();
+                    }
+                }
+
+                lastPostsByUid[log.uid] = { timestamp: logTimestamp };
+
+                if (!document.getElementById(`admin-log-${uniqueId}`)) {
+                    const logDiv = document.createElement("div");
+                    logDiv.id = `admin-log-${uniqueId}`;
+                    logDiv.style.padding = "6px";
+                    logDiv.style.borderBottom = "1px solid #ccc";
+                    logDiv.style.fontSize = "12px";
+                    logDiv.innerHTML = `
+                        <div style="color:#000080; font-weight:bold;">[${log.time}] 【${log.boardName}】 📄 ${log.threadTitle}</div>
+                        <div style="margin: 2px 0;">
+                            種別: <span style="color:#008000; font-weight:bold;">${log.type || '書き込み'}</span> | 
+                            投稿者: <b>${log.name}</b> | 
+                            ID: <span style="font-family:monospace; font-weight:bold;">${log.uid}</span>
+                            ${hasNgWord ? ' | <b style="color:red;">[NGワード含む]</b>' : ''}
+                        </div>
+                        <div style="background:#fcfcfc; border:1px dashed #bbb; padding:5px; margin-top:3px; white-space:pre-wrap; word-break:break-all;">${log.text}</div>
+                        <div style="margin-top:5px; text-align:right;">
+                            ${(!isThreadType && log.postKey) ? `<button class="admin-delete-img-btn" onclick="window.adminDeleteImageHandler(this)" data-thread="${log.threadId}" data-post="${log.postKey}" style="font-size:11px; color:#c05000; cursor:pointer; margin-right:5px;">🖼️ このメッセージの画像を削除</button>` : ''}
+                            <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${log.boardId}" data-thread="${log.threadId}" data-post="${log.postKey}" data-logkey="${logKey}" data-is-thread="${isThreadType}" style="font-size:11px; color:red; cursor:pointer;">${isThreadType ? '🗑️ スレッドごと削除' : '🗑️ このメッセージを削除'}</button>
+                            <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${log.uid}" style="font-size:11px; color:orange; cursor:pointer; margin-left:5px;">⚠️ 警告送信</button>
+                        </div>
+                    `;
+                    adminLogArea.insertBefore(logDiv, adminLogArea.firstChild);
+                }
+
+                const postRef = ref(database, `posts/${log.threadId}/${log.postKey}`);
+                const unsubPostValue = onValue(postRef, (postSnapshot) => {
+                    if (!postSnapshot.exists()) {
+                        const logEl = document.getElementById(`admin-log-${uniqueId}`);
+                        if (logEl) logEl.remove();
+                        const alertEl = document.getElementById(`admin-alert-${uniqueId}`);
+                        if (alertEl) alertEl.remove();
+                        const alertNgEl = document.getElementById(`admin-alert-ng-${uniqueId}`);
+                        if (alertNgEl) alertNgEl.remove();
+                    }
+                });
+                adminListeners.push(unsubPostValue);
+            });
+            adminListeners.push(unsubLogAdded);
+
+            const unsubLogRemoved = onChildRemoved(globalLogsRef, (snapshot) => {
+                const log = snapshot.val();
+                if (!log) return;
+                const uniqueId = `${log.threadId}_${log.postKey}`;
+                const logEl = document.getElementById(`admin-log-${uniqueId}`);
+                if (logEl) logEl.remove();
+                const alertEl = document.getElementById(`admin-alert-${uniqueId}`);
+                if (alertEl) alertEl.remove();
+                const alertNgEl = document.getElementById(`admin-alert-ng-${uniqueId}`);
+                if (alertNgEl) alertNgEl.remove();
+            });
+            adminListeners.push(unsubLogRemoved);
+        }
+
+        // ---------------------------------------------------------
+        // 🛠️ 板別スレッド・メッセージ巡回ブラウザの制御ロジック
+        // ---------------------------------------------------------
+        let adminThreadUnsubscribe = null;
+        let adminPostUnsubscribe = null;
+
+        function initAdminBrowser() {
+            const adminBoardSelect = document.getElementById("adminBoardSelect");
+            const adminThreadListArea = document.getElementById("adminThreadListArea");
+            const adminPostListArea = document.getElementById("adminPostListArea");
+
+            if (!adminBoardSelect) return;
+
+            adminBoardSelect.innerHTML = "<option value=''>-- 板を選択してください --</option>";
+            for (let cat in BOARD_DATA) {
+                const group = document.createElement("optgroup");
+                group.label = cat;
+                for (let boardId in BOARD_DATA[cat]) {
+                    const opt = document.createElement("option");
+                    opt.value = boardId;
+                    opt.textContent = BOARD_DATA[cat][boardId];
+                    group.appendChild(opt);
+                }
+                adminBoardSelect.appendChild(group);
+            }
+
+            adminThreadListArea.innerHTML = "<div style='color:#666; font-style:italic;'>板を選択するとスレッド一覧が表示されます。</div>";
+            adminPostListArea.innerHTML = "<div style='color:#666; font-style:italic;'>スレッドを選択するとメッセージ一覧が表示されます。</div>";
+
+            adminBoardSelect.addEventListener("change", (e) => {
+                const boardId = e.target.value;
+                if (adminThreadUnsubscribe) adminThreadUnsubscribe();
+                if (adminPostUnsubscribe) adminPostUnsubscribe();
+                adminThreadListArea.innerHTML = "";
+                adminPostListArea.innerHTML = "<div style='color:#666; font-style:italic;'>スレッドを選択するとメッセージ一覧が表示されます。</div>";
+
+                if (!boardId) {
+                    adminThreadListArea.innerHTML = "<div style='color:#666; font-style:italic;'>板を選択するとスレッド一覧が表示されます。</div>";
+                    return;
+                }
+
+                adminThreadListArea.innerHTML = "<div style='color:#666;'>スレッドを読み込み中...</div>";
+                const threadsRef = ref(database, 'threads/' + boardId);
+                adminThreadUnsubscribe = onValue(threadsRef, (snapshot) => {
+                    adminThreadListArea.innerHTML = "";
+                    const data = snapshot.val();
+                    if (data) {
+                        let index = 1;
+                        for (let id in data) {
+                            const thread = data[id];
+                            const div = document.createElement("div");
+                            div.style.padding = "4px 5px";
+                            div.style.borderBottom = "1px dashed #ccc";
+                            div.style.cursor = "pointer";
+
+                            const a = document.createElement("a");
+                            a.textContent = `${index}: ${thread.title}`;
+                            a.style.fontWeight = "bold";
+                            
+                            div.appendChild(a);
+                            div.addEventListener("click", () => loadAdminPosts(boardId, id, thread.title));
+                            adminThreadListArea.appendChild(div);
+                            index++;
+                        }
+                    } else {
+                        adminThreadListArea.innerHTML = "<div style='color:#666;'>スレッドがありません。</div>";
+                    }
+                });
+            });
+        }
+
+        function loadAdminPosts(boardId, threadId, threadTitle) {
+            const adminPostListArea = document.getElementById("adminPostListArea");
+            if (adminPostUnsubscribe) adminPostUnsubscribe();
+
+            adminPostListArea.innerHTML = "<div style='color:#666;'>全メッセージを取得中...</div>";
+            const postsRef = ref(database, 'posts/' + threadId);
+            
+            adminPostUnsubscribe = onValue(postsRef, (snapshot) => {
+                adminPostListArea.innerHTML = "";
+                
+                // 📁 スレッド丸ごと削除ができる専用の共通ボタンヘッダーを生成
+                const titleDiv = document.createElement("div");
+                titleDiv.style.fontWeight = "bold";
+                titleDiv.style.color = "#ff0000";
+                titleDiv.style.marginBottom = "8px";
+                titleDiv.style.borderBottom = "2px solid #ff0000";
+                titleDiv.style.paddingBottom = "5px";
+                titleDiv.innerHTML = `📌 スレ: ${threadTitle} <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${boardId}" data-thread="${threadId}" data-post="" data-logkey="" data-is-thread="true" style="font-size:11px; color:#fff; background-color:#ff0000; border:1px solid #cc0000; font-weight:bold; cursor:pointer; margin-left:15px; padding:2px 6px;">🗑️ このスレを丸ごと削除</button>`;
+                adminPostListArea.appendChild(titleDiv);
+
+                const data = snapshot.val();
+                if (data) {
+                    let count = 1;
+                    for (let id in data) {
+                        const post = data[id];
+                        const div = document.createElement("div");
+                        div.style.marginBottom = "8px";
+                        div.style.padding = "6px";
+                        div.style.background = "#fafaf0";
+                        div.style.border = "1px solid #ccc";
+
+                        div.innerHTML = `
+                            <div style="font-size:12px; color:#000;">
+                                <b>${count}</b> ：<b><span style="color:#008000;">${post.name}</span></b> ：${post.time} <span style="color:#666;font-family:monospace;">ID:${post.uid || '???'}</span>
+                            </div>
+                            <div style="margin: 4px 0 4px 10px; white-space: pre-wrap; word-break: break-all; font-size:13px; color:#000;">${post.text}</div>
+                            <div style="text-align: right; margin-top:3px;">
+                                <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${boardId}" data-thread="${threadId}" data-post="${id}" data-logkey="" data-is-thread="false" style="font-size:10px; color:red; font-weight:bold; cursor:pointer; padding:1px 5px;">🗑️ 削除</button>
+                                <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${post.uid || ''}" style="font-size:10px; color:orange; font-weight:bold; cursor:pointer; padding:1px 5px; margin-left:5px;">⚠️ 警告</button>
+                            </div>
+                        `;
+                        adminPostListArea.appendChild(div);
+                        count++;
+                    }
+                } else {
+                    const noPost = document.createElement("div");
+                    noPost.style.color = "#666";
+                    noPost.textContent = "書き込みメッセージはありません。";
+                    adminPostListArea.appendChild(noPost);
+                }
+            });
+        }
+
+        initAdminBrowser();
+        renderBbsMenu();
+    </script>
+    <!-- 💬 レスプレビューポップアップ -->
+    <div id="res-preview-popup">
+        <div class="rp-dt" id="rp-dt-content"></div>
+        <div class="rp-dd" id="rp-dd-content"></div>
+    </div>
+
+    <!-- 🔍 ライトボックス -->
+    <div id="lightbox">
+        <span id="lightbox-close">✕</span>
+        <img id="lightbox-img" src="" alt="">
+    </div>
+<style>
+    /* ダークモード時のセレクトボックスの配色調整 */
+    body.dark #weatherRegionSelect {
+        background: #242424 !important;
+        color: #ccc !important;
+        border-color: #555 !important;
+    }
+</style>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    // 1. 左側サイドバー（板メニュー）の末尾に「天気・地震情報」のリンクを動的に追加
+    const sidebar = document.querySelector('.sidebar-box');
+    if (sidebar) {
+        const catTitle = document.createElement('div');
+        catTitle.className = 'cat-title';
+        catTitle.textContent = '⏳ 外部情報';
+        
+        const linksArea = document.createElement('div');
+        linksArea.className = 'board-links-area';
+        
+        const link = document.createElement('a');
+        link.className = 'board-link';
+        link.textContent = '天気・地震情報';
+        link.style.fontWeight = 'bold';
+        
+        // リンククリック時の画面切り替え処理
+        link.addEventListener('click', () => {
+            // 既存のすべての画面セクション（スレ一覧や書き込みなど）を非表示にする
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            
+            // 新しく作った天気・地震情報の画面を表示する
+            const myView = document.getElementById('weatherEarthquakeView');
+            if (myView) myView.classList.add('active');
+            
+            // 上部のナビゲーションテキストが現在のコードにあれば更新する
+            const locDisp = document.getElementById('currentLocationDisplay') || document.querySelector('.nav-text span');
+            if (locDisp) locDisp.textContent = '天気・地震情報';
+            
+            // データの初回読み込み
+            const currentRegion = document.getElementById('weatherRegionSelect').value;
+            loadWeatherData(currentRegion);
+            loadEarthquakeData();
+        });
+        
+        linksArea.appendChild(link);
+        sidebar.appendChild(catTitle);
+        sidebar.appendChild(linksArea);
+    }
+
+    // 2. メインコンテンツエリアに新しい表示画面（ビュー）を動的に追加
+    const mainBox = document.querySelector('.main-content-box');
+    if (mainBox) {
+        const viewDiv = document.createElement('div');
+        viewDiv.id = 'weatherEarthquakeView';
+        viewDiv.className = 'view-section';
+        viewDiv.innerHTML = `
+            <div class="board-title">🌍 日本地域の天気・地震情報</div>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
+                
+                <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 12px; border: 1px solid #ccc;">
+                    <h3 style="color: #af0000; border-bottom: 1px dashed #999; margin: 0 0 10px 0; font-size: 14px;">☀️ 地域別 天気予報</h3>
+                    <select id="weatherRegionSelect" style="padding: 4px; font-size: 13px; margin-bottom: 10px; width: 100%; border: 1px solid #aaa; background: #fff; color: #000;">
+                        <option value="130000">東京都</option>
+                        <option value="016000">北海道（石狩・空知・後志）</option>
+                        <option value="020000">青森県</option>
+                        <option value="030000">岩手県</option>
+                        <option value="040000">宮城県</option>
+                        <option value="050000">秋田県</option>
+                        <option value="060000">山形県</option>
+                        <option value="070000">福島県</option>
+                        <option value="080000">茨城県</option>
+                        <option value="090000">栃木県</option>
+                        <option value="100000">群馬県</option>
+                        <option value="110000">埼玉県</option>
+                        <option value="120000">千葉県</option>
+                        <option value="140000">神奈川県</option>
+                        <option value="150000">新潟県</option>
+                        <option value="160000">富山県</option>
+                        <option value="170000">石川県</option>
+                        <option value="180000">福井県</option>
+                        <option value="190000">山梨県</option>
+                        <option value="200000">長野県</option>
+                        <option value="210000">岐阜県</option>
+                        <option value="220000">静岡県</option>
+                        <option value="230000">愛知県</option>
+                        <option value="240000">三重県</option>
+                        <option value="250000">滋賀県</option>
+                        <option value="260000">京都府</option>
+                        <option value="270000">大阪府</option>
+                        <option value="280000">兵庫県</option>
+                        <option value="290000">奈良県</option>
+                        <option value="300000">和歌山県</option>
+                        <option value="310000">鳥取県</option>
+                        <option value="320000">島根県</option>
+                        <option value="330000">岡山県</option>
+                        <option value="340000">広島県</option>
+                        <option value="350000">山口県</option>
+                        <option value="360000">徳島県</option>
+                        <option value="370000">香川県</option>
+                        <option value="380000">愛媛県</option>
+                        <option value="390000">高知県</option>
+                        <option value="400000">福岡県</option>
+                        <option value="410000">佐賀県</option>
+                        <option value="420000">長崎県</option>
+                        <option value="430000">熊本県</option>
+                        <option value="440000">大分県</option>
+                        <option value="450000">宮崎県</option>
+                        <option value="460100">鹿児島県</option>
+                        <option value="471000">沖縄県</option>
+                    </select>
+                    <div id="weatherResultArea" style="font-size: 13px; line-height: 1.6; min-height: 100px;">選択した地域の天気を読み込み中...</div>
+                </div>
+                
+                <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 12px; border: 1px solid #ccc;">
+                    <h3 style="color: #af0000; border-bottom: 1px dashed #999; margin: 0 0 10px 0; font-size: 14px;">🌋 最近の地震情報 (最新5件)</h3>
+                    <div id="earthquakeResultArea" style="font-size: 13px; line-height: 1.6; min-height: 100px;">地震情報を取得中...</div>
+                </div>
+                
+            </div>
+        </div>
+        `;
+        mainBox.appendChild(viewDiv);
+        
+        // 都道府県切り替え時のイベントを設定
+        document.getElementById('weatherRegionSelect').addEventListener('change', (e) => {
+            loadWeatherData(e.target.value);
+        });
+    }
+});
+
+// ☀️ 気象庁公式のパブリックJSONからデータを取得して解析する関数
+function loadWeatherData(code) {
+    const resultArea = document.getElementById('weatherResultArea');
+    if (!resultArea) return;
+    
+    resultArea.textContent = "天気を読み込み中...";
+    
+    fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`)
+        .then(res => res.json())
+        .then(data => {
+            const reportDatetime = new Date(data[0].reportDatetime).toLocaleString('ja-JP');
+            let html = `<div style="font-size:11px; color:#666; margin-bottom:8px;">発表時刻: ${reportDatetime}</div>`;
+            
+            // 選択された都道府県内の詳細地域ごとにループしてパース
+            data[0].timeSeries[0].areas.forEach(area => {
+                html += `<div style="font-weight:bold; color:#008000; margin-top:8px;">【${area.area.name}】</div>`;
+                const times = data[0].timeSeries[0].timeDefines;
+                area.weathers.forEach((weather, index) => {
+                    const dateStr = new Date(times[index]).toLocaleDateString('ja-JP', {month:'short', day:'numeric'});
+                    html += `<div style="margin-left:10px; margin-bottom:4px;"><b>${dateStr}:</b> ${weather}</div>`;
+                });
+            });
+            resultArea.innerHTML = html;
+        })
+        .catch(err => {
+            resultArea.textContent = "天気情報の取得に失敗しました。";
+            console.error(err);
+        });
+}
+
+// 🌋 P2P地震情報APIからリアルタイムの地震履歴を取得する関数
+function loadEarthquakeData() {
+    const resultArea = document.getElementById('earthquakeResultArea');
+    if (!resultArea) return;
+    
+    resultArea.textContent = "地震情報を取得中...";
+    
+    fetch('https://api.p2pquake.net/v2/history?codes=551&limit=5')
+        .then(res => res.json())
+        .then(data => {
+            let html = '';
+            if (data.length === 0) {
+                html = "最近の地震情報はありません。";
+            } else {
+                data.forEach(item => {
+                    const time = item.earthquake.time;
+                    const place = item.earthquake.hypocenter.name || "不明";
+                    const scale = parseMaxScale(item.earthquake.maxScale);
+                    html += `<div style="border-bottom: 1px dashed #ccc; padding: 6px 0;">
+                        <b>発生時刻:</b> ${time}<br>
+                        <b>震源地:</b> ${place}<br>
+                        <b>最大震度:</b> <span style="color:#ff0000; font-weight:bold;">${scale}</span>
+                    </div>`;
+                });
+            }
+            resultArea.innerHTML = html;
+        })
+        .catch(err => {
+            resultArea.textContent = "地震情報の取得に失敗しました。";
+            console.error(err);
+        });
+}
+
+// 震度の数値を掲示板らしい読みやすい文字列に変える変換器
+function parseMaxScale(scale) {
+    switch(scale) {
+        case 10: return "1";
+        case 20: return "2";
+        case 30: return "3";
+        case 40: return "4";
+        case 45: return "5弱";
+        case 50: return "5強";
+        case 55: return "6弱";
+        case 60: return "6強";
+        case 70: return "7";
+        default: return "不明または調査中";
+    }
+}
+</script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    // 5分（300000ミリ秒）ごとに最新情報をチェックして自動書き換え
+    setInterval(() => {
+        const myView = document.getElementById('weatherEarthquakeView');
+        
+        // ユーザーが現在「天気・地震情報」の画面を見ている（activeである）ときだけ実行
+        // ※他のスレを見ているときは相手のサーバーに迷惑をかけないよう、賢くタイマーをスリープさせます
+        if (myView && myView.classList.contains('active')) {
+            
+            // 現在選択されている都道府県のコードを取得して天気をリロード
+            const selectEl = document.getElementById('weatherRegionSelect');
+            if (selectEl && typeof loadWeatherData === 'function') {
+                loadWeatherData(selectEl.value);
+            }
+            
+            // 地震データをリロード
+            if (typeof loadEarthquakeData === 'function') {
+                loadEarthquakeData();
+            }
+            
+            console.log("【自動更新】天気と地震情報を最新にアップデートしました。");
+        }
+    }, 300000); // 300000ms = 5分（もし「1分ごと」にしたい場合は 60000 に変更してください）
+});
+</script>
+</body>
+</html>
