@@ -297,24 +297,6 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, push, onValue, set, update, onDisconnect, onChildAdded, onChildRemoved, query, limitToLast, get, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-        // 有さんのFirebase設定
-        const firebaseConfig = {
-            apiKey: "AIzaSyALgzyqyzbSLHX8sBCrtN5L7lNDL-c5HAM",
-            authDomain: "my-2ch-bbs.firebaseapp.com",
-            projectId: "my-2ch-bbs",
-            storageBucket: "my-2ch-bbs.firebasestorage.app",
-            messagingSenderId: "14772039514",
-            appId: "1:14772039514:web:76f3aaf1d7e02fe2a3cd63",
-            measurementId: "G-RKRMPEQKV0",
-            databaseURL: "https://my-2ch-bbs-default-rtdb.asia-southeast1.firebasedatabase.app/"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
         // ---------------------------------------------------------
         // 🚨 【NGワードおよび荒らし対策の定義設定】
         // ---------------------------------------------------------
@@ -477,55 +459,6 @@
 
         // 👥 リアルタイム同時接続
         const myUid = getTodayID();
-        const myPresenceRef = ref(database, 'presence/' + myUid);
-        const connectedRef = ref(database, ".info/connected");
-
-        onValue(connectedRef, (snapshot) => {
-            if (snapshot.val() === true) {
-                set(myPresenceRef, { uid: myUid, lastActive: Date.now() });
-                onDisconnect(myPresenceRef).remove();
-            }
-        });
-
-        const presenceRef = ref(database, 'presence');
-        onValue(presenceRef, (snapshot) => {
-            const data = snapshot.val();
-            const count = data ? Object.keys(data).length : 0;
-            
-            document.getElementById("onlineCount").textContent = count;
-            const adminOnlineCount = document.getElementById("adminOnlineCount");
-            const adminUserList = document.getElementById("adminUserList");
-            
-            if (adminOnlineCount && adminUserList) {
-                adminOnlineCount.textContent = count;
-                adminUserList.innerHTML = "";
-                if (data) {
-                    for (let id in data) {
-                        const div = document.createElement("div");
-                        div.style.fontSize = "12px";
-                        div.style.padding = "2px 0";
-                        div.innerHTML = `・ID: <span style="font-family:monospace;font-weight:bold;color:#008000;">${id}</span> ${id === myUid ? '<span style="color:#666;">(あなた)</span>' : ''}`;
-                        adminUserList.appendChild(div);
-                    }
-                } else {
-                    adminUserList.innerHTML = "<div style='color:#666;'>誰もいません</div>";
-                }
-            }
-        });
-
-        // 👑 管理者からの警告リアルタイム受信
-        const myWarningRef = ref(database, 'warnings/' + myUid);
-        onValue(myWarningRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                if (Date.now() - data.timestamp < 60000) {
-                    const banUntil = Date.now() + 30000;
-                    localStorage.setItem("bbs_warned_until", banUntil);
-                    alert(`🚨【管理者からの警告通知】🚨\n\n${data.message}\n\n⏱️ この通知を受け取ったため、30秒間は書き込みができません。`);
-                    set(myWarningRef, null);
-                }
-            }
-        });
 
         // 🔒 名前の一時ロック・管理機能（24時間制限）
         function checkNameLock() {
@@ -702,12 +635,6 @@
             threadList.innerHTML = "<div style='color:#666; font-size:12px;'>読み込み中...</div>";
             const searchInput = document.getElementById("threadSearchInput");
             if (searchInput) searchInput.value = "";
-            const threadsRef = ref(database, 'threads/' + boardId);
-            threadUnsubscribe = onValue(threadsRef, (snapshot) => {
-                allThreadData = snapshot.val() || {};
-                const kw = searchInput ? searchInput.value : "";
-                renderThreadList(allThreadData, kw);
-            });
         }
 
         // 検索入力イベント
@@ -801,55 +728,6 @@
             
             if (postUnsubscribe) postUnsubscribe();
             postList.innerHTML = "<div style='color:#666; font-size:12px;'>読み込み中...</div>";
-            const postsRef = ref(database, 'posts/' + threadId);
-            postUnsubscribe = onValue(postsRef, (snapshot) => {
-                postList.innerHTML = "";
-                const data = snapshot.val();
-                if (data) {
-                    let count = 1;
-                    for (let id in data) {
-                        const post = data[id];
-                        
-                        const postGroup = document.createElement("div");
-                        postGroup.className = "post-group";
-                        postGroup.id = `post-${count}`;
-
-                        const dt = document.createElement("div");
-                        dt.className = "post-dt";
-                        dt.innerHTML = `${count} ：<b>${post.name}</b> ：${post.time} <span class="post-id">${post.uid ? 'ID:'+post.uid : 'ID:???'}</span>`;
-                        
-                        const dd = document.createElement("div");
-                        dd.className = "post-dd";
-                        dd.innerHTML = parsePostText(post.text);
-
-                        postGroup.appendChild(dt);
-                        postGroup.appendChild(dd);
-
-                        if (post.imageData) {
-                            const toggleBtn = document.createElement("span");
-                            toggleBtn.className = "img-toggle-btn";
-                            toggleBtn.textContent = "画像を展開";
-                            const img = document.createElement("img");
-                            img.src = post.imageData;
-                            img.className = "post-img";
-                            img.onclick = () => openLightbox(post.imageData);
-                            toggleBtn.onclick = () => {
-                                const isOpen = img.classList.toggle("open");
-                                toggleBtn.textContent = isOpen ? "閉じる" : "画像を展開";
-                            };
-                            postGroup.appendChild(toggleBtn);
-                            postGroup.appendChild(img);
-                        }
-
-                        postList.appendChild(postGroup);
-                        postPreviewMap[count] = {
-                            dt: `<b>${post.name || '名無しさん'}</b> ${post.time || ''} <span style="font-family:monospace;font-size:11px;">${post.uid || ''}</span>`,
-                            dd: post.text || ''
-                        };
-                        count++;
-                    }
-                }
-            });
         }
 
         backToListViewBtn.addEventListener("click", () => {
@@ -872,9 +750,6 @@
 
             const timeStr = getNowString();
             const userId = getTodayID();
-            const boardThreadsRef = ref(database, 'threads/' + currentBoardId);
-            const newThreadRef = push(boardThreadsRef);
-            const newThreadId = newThreadRef.key;
             
             // 🚨 強力な正規化を通した高度なNGワード自動チェック
             const normalizedTitle = normalizeForNgCheck(title);
@@ -884,38 +759,12 @@
             const threadImgInput = document.getElementById("threadImageInput");
             readImageFile(threadImgInput).then(imgData => {
 
-            set(newThreadRef, { title: title, createdAt: timeStr, replyCount: 1 }).then(() => {
-                const newPostRef = push(ref(database, 'posts/' + newThreadId));
-                const postKey = newPostRef.key;
-                const postData = { name: name, text: firstMsg, time: timeStr, uid: userId };
-                if (imgData) postData.imageData = imgData;
-
-                set(newPostRef, postData).then(() => {
-                    push(ref(database, 'global_logs'), {
-                        boardId: currentBoardId,
-                        boardName: ALL_BOARDS[currentBoardId],
-                        threadId: newThreadId,
-                        postKey: postKey,
-                        threadTitle: title,
-                        name: name,
-                        text: firstMsg,
-                        time: timeStr,
-                        uid: userId,
-                        type: "新規スレッド",
-                        timestamp: Date.now(),
-                        hasNgWord: hasNgWord
-                    });
-                });
-
                 lockName(name);
                 updateLastPostTime();
                 
                 newThreadTitleInput.value = "";
                 threadFirstMessageInput.value = "";
                 if (threadImgInput) threadImgInput.value = "";
-                openThread(newThreadId, title);
-            });
-
             }); // readImageFile
         });
 
@@ -933,9 +782,6 @@
             const postImgInput = document.getElementById("postImageInput");
             readImageFile(postImgInput).then(imgData => {
 
-            const newPostRef = push(ref(database, 'posts/' + currentThreadId));
-            const postKey = newPostRef.key;
-
             // 🚨 強力な正規化を通した高度なNGワード自動チェック
             const normalizedText = normalizeForNgCheck(text);
             const hasNgWord = NG_WORDS.some(word => normalizedText.includes(word));
@@ -943,29 +789,10 @@
             const postData = { name: name, text: text, time: timeStr, uid: userId };
             if (imgData) postData.imageData = imgData;
 
-            set(newPostRef, postData).then(() => {
-                push(ref(database, 'global_logs'), {
-                    boardId: currentBoardId,
-                    boardName: ALL_BOARDS[currentBoardId],
-                    threadId: currentThreadId,
-                    postKey: postKey,
-                    threadTitle: currentThreadTitle.textContent,
-                    name: name,
-                    text: text,
-                    time: timeStr,
-                    uid: userId,
-                    type: "レス",
-                    timestamp: Date.now(),
-                    hasNgWord: hasNgWord
-                });
-
-                lockName(name);
-                updateLastPostTime();
-                postMessageInput.value = "";
-                if (postImgInput) postImgInput.value = "";
-                // レス数カウントアップ
-                update(ref(database, 'threads/' + currentBoardId + '/' + currentThreadId), { replyCount: increment(1) });
-            });
+            lockName(name);
+            updateLastPostTime();
+            postMessageInput.value = "";
+            if (postImgInput) postImgInput.value = "";
 
             }); // readImageFile
         });
@@ -1062,9 +889,6 @@
             if (isThread) {
                 if (confirm("【⚠️警告⚠️】\n本当にこのスレッドを『丸ごと削除』しますか？\nスレッド内の全メッセージが完全に消去され元に戻せません。")) {
                     if (boardId && threadId) {
-                        set(ref(database, 'threads/' + boardId + '/' + threadId), null);
-                        set(ref(database, 'posts/' + threadId), null);
-                        if (logKey) set(ref(database, 'global_logs/' + logKey), null);
                         alert("スレッドを丸ごと完全削除しました。");
                         const adminPostListArea = document.getElementById("adminPostListArea");
                         if (adminPostListArea) {
@@ -1074,12 +898,6 @@
                 }
             } else {
                 if (confirm("本当にこのメッセージを削除しますか？\n（データベースから完全に消去され、一般画面にもリアルタイムに反映されます）")) {
-                    if (threadId && postKey) {
-                        set(ref(database, 'posts/' + threadId + '/' + postKey), null);
-                    }
-                    if (logKey) {
-                        set(ref(database, 'global_logs/' + logKey), null);
-                    }
                     alert("該当のメッセージを削除しました。");
                 }
             }
@@ -1090,13 +908,10 @@
             const postKey = btn.getAttribute("data-post");
             if (!threadId || !postKey) return;
             if (confirm("この投稿の画像だけを削除しますか？\n（テキスト本文は残ります）")) {
-                set(ref(database, 'posts/' + threadId + '/' + postKey + '/imageData'), null)
-                    .then(() => {
-                        alert("画像を削除しました。");
-                        btn.disabled = true;
-                        btn.textContent = "（削除済み）";
-                        btn.style.color = "#999";
-                    });
+                alert("画像を削除しました。");
+                btn.disabled = true;
+                btn.textContent = "（削除済み）";
+                btn.style.color = "#999";
             }
         };
 
@@ -1106,12 +921,7 @@
 
             const warnMsg = prompt(`送信者(ID: ${uid})への警告メッセージ内容を入力してください：`, "不適切な発言（NGワードなど）が検出されました。掲示板のルールを守って書き込みを行ってください。");
             if (warnMsg) {
-                set(ref(database, 'warnings/' + uid), {
-                    message: warnMsg,
-                    timestamp: Date.now()
-                }).then(() => {
-                    alert("対象ユーザーへのリアルタイム警告シグナルを送信しました。");
-                });
+                alert("対象ユーザーへのリアルタイム警告シグナルを送信しました。");
             }
         };
 
@@ -1123,174 +933,6 @@
 
             adminLogArea.innerHTML = "<div style='color:#666;'>リアルタイムログの読み込みを開始しました...</div>";
             adminAlertArea.innerHTML = "<div style='color:#666; font-size:12px;'>アラート履歴はありません</div>";
-
-            const globalLogsRef = ref(database, 'global_logs');
-            const logsQuery = query(globalLogsRef, limitToLast(100)); 
-
-            const unsubLogAdded = onChildAdded(logsQuery, (snapshot) => {
-                const logKey = snapshot.key; 
-                const log = snapshot.val();
-                if (!log) return;
-
-                if (adminLogArea.innerHTML.includes("リアルタイムログの読み込みを開始しました...")) {
-                    adminLogArea.innerHTML = "";
-                }
-
-                const uniqueId = `${log.threadId}_${log.postKey}`;
-                const hasNgWord = log.hasNgWord;
-                const isThreadType = log.type === "新規スレッド"; 
-                let logTimestamp = log.timestamp || Date.now();
-
-                const now = Date.now();
-                const isRecentLog = (now - logTimestamp) < 30000; 
-                
-                // 連投検出アラート
-                if (lastPostsByUid[log.uid]) {
-                    const prevPost = lastPostsByUid[log.uid];
-                    const timeDiff = logTimestamp - prevPost.timestamp;
-                    
-                    if (timeDiff >= 0 && timeDiff < 4000) { 
-                        if (adminAlertArea.innerHTML.includes("アラート履歴はありません")) {
-                            adminAlertArea.innerHTML = "";
-                        }
-                        
-                        if (!document.getElementById(`admin-alert-${uniqueId}`)) {
-                            const alertDiv = document.createElement("div");
-                            alertDiv.id = `admin-alert-${uniqueId}`;
-                            alertDiv.style.backgroundColor = "#fff";
-                            alertDiv.style.border = "1px solid #ff0000";
-                            alertDiv.style.padding = "6px";
-                            alertDiv.style.marginBottom = "5px";
-                            alertDiv.style.fontSize = "12px";
-                            alertDiv.innerHTML = `
-                                <b style="color:red;">⚠️連投検出 (${Math.ceil(timeDiff/1000)}秒間隔)</b><br>
-                                <b>ID:</b> <span style="font-family:monospace;">${log.uid}</span> | <b>名前:</b> ${log.name}<br>
-                                <b>場所:</b> ${log.boardName} ＞ ${log.threadTitle}<br>
-                                <b>内容:</b> <span style="color:#555;">${log.text.substring(0, 40)}${log.text.length > 40 ? '...' : ''}</span>
-                                <div style="margin-top: 5px;">
-                                    <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${log.boardId}" data-thread="${log.threadId}" data-post="${log.postKey}" data-logkey="${logKey}" data-is-thread="${isThreadType}" style="color:red; font-weight:bold; cursor:pointer; font-size:11px;">${isThreadType ? '🗑️ スレッドごと削除' : '🗑️ メッセージ削除'}</button>
-                                    <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${log.uid}" style="color:orange; font-weight:bold; cursor:pointer; font-size:11px; margin-left:10px;">⚠️ 送信者へ警告</button>
-                                </div>
-                            `;
-                            adminAlertArea.insertBefore(alertDiv, adminAlertArea.firstChild);
-
-                            if (isRecentLog) playWarningSound();
-                        }
-                    }
-                }
-
-                // NGワード検出アラート
-                if (hasNgWord) {
-                    if (adminAlertArea.innerHTML.includes("アラート履歴はありません")) {
-                        adminAlertArea.innerHTML = "";
-                    }
-                    if (!document.getElementById(`admin-alert-ng-${uniqueId}`)) {
-                        // 🤖 自動処理モードの場合は即時削除＋警告
-                        if (window.autoNgMode && isRecentLog) {
-                            if (log.threadId && log.postKey) {
-                                set(ref(database, 'posts/' + log.threadId + '/' + log.postKey), null);
-                            }
-                            if (logKey) set(ref(database, 'global_logs/' + logKey), null);
-                            if (log.uid) {
-                                set(ref(database, 'warnings/' + log.uid), {
-                                    message: "NGワードを含む書き込みが自動検出・削除されました。掲示板のルールを守って書き込みを行ってください。",
-                                    timestamp: Date.now()
-                                });
-                            }
-                            const alertDiv = document.createElement("div");
-                            alertDiv.id = `admin-alert-ng-${uniqueId}`;
-                            alertDiv.style.backgroundColor = "#f0fff0";
-                            alertDiv.style.border = "2px solid #00aa00";
-                            alertDiv.style.padding = "6px";
-                            alertDiv.style.marginBottom = "5px";
-                            alertDiv.style.fontSize = "12px";
-                            alertDiv.innerHTML = `
-                                <b style="color:#008000;">✅ 自動処理完了</b><br>
-                                <b>ID:</b> <span style="font-family:monospace;">${log.uid}</span> | <b>名前:</b> ${log.name}<br>
-                                <b>場所:</b> ${log.boardName} ＞ ${log.threadTitle}<br>
-                                <b>内容:</b> <span style="color:#b30000;">${log.text}</span><br>
-                                <span style="color:#008000; font-size:11px;">🗑️ 自動削除済み ／ ⚠️ 警告送信済み</span>
-                            `;
-                            adminAlertArea.insertBefore(alertDiv, adminAlertArea.firstChild);
-                        } else {
-                            // 手動モード：ボタンを表示
-                            const alertDiv = document.createElement("div");
-                            alertDiv.id = `admin-alert-ng-${uniqueId}`;
-                            alertDiv.style.backgroundColor = "#fff5f5";
-                            alertDiv.style.border = "2px solid #ff0000";
-                            alertDiv.style.padding = "6px";
-                            alertDiv.style.marginBottom = "5px";
-                            alertDiv.style.fontSize = "12px";
-                            alertDiv.innerHTML = `
-                                <b style="color:red;">🚨 NGワード検出</b><br>
-                                <b>ID:</b> <span style="font-family:monospace;">${log.uid}</span> | <b>名前:</b> ${log.name}<br>
-                                <b>場所:</b> ${log.boardName} ＞ ${log.threadTitle}<br>
-                                <b>内容:</b> <span style="color:#b30000; font-weight:bold;">${log.text}</span>
-                                <div style="margin-top: 5px;">
-                                    <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${log.boardId}" data-thread="${log.threadId}" data-post="${log.postKey}" data-logkey="${logKey}" data-is-thread="${isThreadType}" style="color:red; font-weight:bold; cursor:pointer; font-size:11px;">${isThreadType ? '🗑️ スレッドごと削除' : '🗑️ メッセージ削除'}</button>
-                                    <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${log.uid}" style="color:orange; font-weight:bold; cursor:pointer; font-size:11px; margin-left:10px;">⚠️ 送信者へ警告</button>
-                                </div>
-                            `;
-                            adminAlertArea.insertBefore(alertDiv, adminAlertArea.firstChild);
-                        }
-
-                        if (isRecentLog) playWarningSound();
-                    }
-                }
-
-                lastPostsByUid[log.uid] = { timestamp: logTimestamp };
-
-                if (!document.getElementById(`admin-log-${uniqueId}`)) {
-                    const logDiv = document.createElement("div");
-                    logDiv.id = `admin-log-${uniqueId}`;
-                    logDiv.style.padding = "6px";
-                    logDiv.style.borderBottom = "1px solid #ccc";
-                    logDiv.style.fontSize = "12px";
-                    logDiv.innerHTML = `
-                        <div style="color:#000080; font-weight:bold;">[${log.time}] 【${log.boardName}】 📄 ${log.threadTitle}</div>
-                        <div style="margin: 2px 0;">
-                            種別: <span style="color:#008000; font-weight:bold;">${log.type || '書き込み'}</span> | 
-                            投稿者: <b>${log.name}</b> | 
-                            ID: <span style="font-family:monospace; font-weight:bold;">${log.uid}</span>
-                            ${hasNgWord ? ' | <b style="color:red;">[NGワード含む]</b>' : ''}
-                        </div>
-                        <div style="background:#fcfcfc; border:1px dashed #bbb; padding:5px; margin-top:3px; white-space:pre-wrap; word-break:break-all;">${log.text}</div>
-                        <div style="margin-top:5px; text-align:right;">
-                            ${(!isThreadType && log.postKey) ? `<button class="admin-delete-img-btn" onclick="window.adminDeleteImageHandler(this)" data-thread="${log.threadId}" data-post="${log.postKey}" style="font-size:11px; color:#c05000; cursor:pointer; margin-right:5px;">🖼️ このメッセージの画像を削除</button>` : ''}
-                            <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${log.boardId}" data-thread="${log.threadId}" data-post="${log.postKey}" data-logkey="${logKey}" data-is-thread="${isThreadType}" style="font-size:11px; color:red; cursor:pointer;">${isThreadType ? '🗑️ スレッドごと削除' : '🗑️ このメッセージを削除'}</button>
-                            <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${log.uid}" style="font-size:11px; color:orange; cursor:pointer; margin-left:5px;">⚠️ 警告送信</button>
-                        </div>
-                    `;
-                    adminLogArea.insertBefore(logDiv, adminLogArea.firstChild);
-                }
-
-                const postRef = ref(database, `posts/${log.threadId}/${log.postKey}`);
-                const unsubPostValue = onValue(postRef, (postSnapshot) => {
-                    if (!postSnapshot.exists()) {
-                        const logEl = document.getElementById(`admin-log-${uniqueId}`);
-                        if (logEl) logEl.remove();
-                        const alertEl = document.getElementById(`admin-alert-${uniqueId}`);
-                        if (alertEl) alertEl.remove();
-                        const alertNgEl = document.getElementById(`admin-alert-ng-${uniqueId}`);
-                        if (alertNgEl) alertNgEl.remove();
-                    }
-                });
-                adminListeners.push(unsubPostValue);
-            });
-            adminListeners.push(unsubLogAdded);
-
-            const unsubLogRemoved = onChildRemoved(globalLogsRef, (snapshot) => {
-                const log = snapshot.val();
-                if (!log) return;
-                const uniqueId = `${log.threadId}_${log.postKey}`;
-                const logEl = document.getElementById(`admin-log-${uniqueId}`);
-                if (logEl) logEl.remove();
-                const alertEl = document.getElementById(`admin-alert-${uniqueId}`);
-                if (alertEl) alertEl.remove();
-                const alertNgEl = document.getElementById(`admin-alert-ng-${uniqueId}`);
-                if (alertNgEl) alertNgEl.remove();
-            });
-            adminListeners.push(unsubLogRemoved);
         }
 
         // ---------------------------------------------------------
@@ -1335,32 +977,6 @@
                 }
 
                 adminThreadListArea.innerHTML = "<div style='color:#666;'>スレッドを読み込み中...</div>";
-                const threadsRef = ref(database, 'threads/' + boardId);
-                adminThreadUnsubscribe = onValue(threadsRef, (snapshot) => {
-                    adminThreadListArea.innerHTML = "";
-                    const data = snapshot.val();
-                    if (data) {
-                        let index = 1;
-                        for (let id in data) {
-                            const thread = data[id];
-                            const div = document.createElement("div");
-                            div.style.padding = "4px 5px";
-                            div.style.borderBottom = "1px dashed #ccc";
-                            div.style.cursor = "pointer";
-
-                            const a = document.createElement("a");
-                            a.textContent = `${index}: ${thread.title}`;
-                            a.style.fontWeight = "bold";
-                            
-                            div.appendChild(a);
-                            div.addEventListener("click", () => loadAdminPosts(boardId, id, thread.title));
-                            adminThreadListArea.appendChild(div);
-                            index++;
-                        }
-                    } else {
-                        adminThreadListArea.innerHTML = "<div style='color:#666;'>スレッドがありません。</div>";
-                    }
-                });
             });
         }
 
@@ -1369,52 +985,6 @@
             if (adminPostUnsubscribe) adminPostUnsubscribe();
 
             adminPostListArea.innerHTML = "<div style='color:#666;'>全メッセージを取得中...</div>";
-            const postsRef = ref(database, 'posts/' + threadId);
-            
-            adminPostUnsubscribe = onValue(postsRef, (snapshot) => {
-                adminPostListArea.innerHTML = "";
-                
-                // 📁 スレッド丸ごと削除ができる専用の共通ボタンヘッダーを生成
-                const titleDiv = document.createElement("div");
-                titleDiv.style.fontWeight = "bold";
-                titleDiv.style.color = "#ff0000";
-                titleDiv.style.marginBottom = "8px";
-                titleDiv.style.borderBottom = "2px solid #ff0000";
-                titleDiv.style.paddingBottom = "5px";
-                titleDiv.innerHTML = `📌 スレ: ${threadTitle} <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${boardId}" data-thread="${threadId}" data-post="" data-logkey="" data-is-thread="true" style="font-size:11px; color:#fff; background-color:#ff0000; border:1px solid #cc0000; font-weight:bold; cursor:pointer; margin-left:15px; padding:2px 6px;">🗑️ このスレを丸ごと削除</button>`;
-                adminPostListArea.appendChild(titleDiv);
-
-                const data = snapshot.val();
-                if (data) {
-                    let count = 1;
-                    for (let id in data) {
-                        const post = data[id];
-                        const div = document.createElement("div");
-                        div.style.marginBottom = "8px";
-                        div.style.padding = "6px";
-                        div.style.background = "#fafaf0";
-                        div.style.border = "1px solid #ccc";
-
-                        div.innerHTML = `
-                            <div style="font-size:12px; color:#000;">
-                                <b>${count}</b> ：<b><span style="color:#008000;">${post.name}</span></b> ：${post.time} <span style="color:#666;font-family:monospace;">ID:${post.uid || '???'}</span>
-                            </div>
-                            <div style="margin: 4px 0 4px 10px; white-space: pre-wrap; word-break: break-all; font-size:13px; color:#000;">${post.text}</div>
-                            <div style="text-align: right; margin-top:3px;">
-                                <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${boardId}" data-thread="${threadId}" data-post="${id}" data-logkey="" data-is-thread="false" style="font-size:10px; color:red; font-weight:bold; cursor:pointer; padding:1px 5px;">🗑️ 削除</button>
-                                <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${post.uid || ''}" style="font-size:10px; color:orange; font-weight:bold; cursor:pointer; padding:1px 5px; margin-left:5px;">⚠️ 警告</button>
-                            </div>
-                        `;
-                        adminPostListArea.appendChild(div);
-                        count++;
-                    }
-                } else {
-                    const noPost = document.createElement("div");
-                    noPost.style.color = "#666";
-                    noPost.textContent = "書き込みメッセージはありません。";
-                    adminPostListArea.appendChild(noPost);
-                }
-            });
         }
 
         initAdminBrowser();
