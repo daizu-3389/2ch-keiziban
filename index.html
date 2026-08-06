@@ -64,26 +64,34 @@
   <div id="posts">読み込み中...</div>
 
   <script>
-    // Supabaseの設定（設定済み）
+    // Supabaseの設定
     const SUPABASE_URL = 'https://yeotqaorheaxjppylfgg.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_sUx3gtUhP6hHPhnxrACBnQ_5FsbVTOW';
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // 変数名を _supabase に変更してバグを修正
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // 投稿一覧を取得して表示する関数
     async function fetchPosts() {
-      const { data, error } = await supabase
+      const { data, error } = await _supabase
         .from('posts')
         .select('*')
         .order('id', { ascending: true });
 
       if (error) {
         console.error('エラー:', error);
-        document.getElementById('posts').innerText = 'データの読み込みに失敗しました。';
+        document.getElementById('posts').innerText = 'エラーが発生しました: ' + error.message;
         return;
       }
 
       const postsDiv = document.getElementById('posts');
+
+      // 投稿が0件の場合のメッセージ
+      if (!data || data.length === 0) {
+        postsDiv.innerHTML = 'まだ書き込みがありません。最初のレスを投稿してみよう！';
+        return;
+      }
+
       postsDiv.innerHTML = '';
 
       data.forEach(post => {
@@ -110,7 +118,7 @@
         return;
       }
 
-      const { error } = await supabase
+      const { error } = await _supabase
         .from('posts')
         .insert([{ name: nameInput, content: contentInput }]);
 
