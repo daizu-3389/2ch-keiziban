@@ -64,11 +64,11 @@
   <div id="posts">読み込み中...</div>
 
   <script>
-    // Supabaseの設定
+    // Supabaseの設定（正しいanonキーを適用）
     const SUPABASE_URL = 'https://yeotqaorheaxjppylfgg.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_sUx3gtUhP6hHPhnxrACBnQ_5FsbVTOW';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inllb3RxYW9yaGVheGpwcHlsZmdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MzA1NzMsImV4cCI6MjEwMTUwNjU3M30.GqbadI7MCM3h6xT9Ro-OJVzjgjmVip9vn5G6iA9KxoM';
 
-    // 変数名を dbClient に変更して名前の衝突を完全に防止！
+    // クライアントの作成
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // 投稿一覧を取得して表示する関数
