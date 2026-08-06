@@ -68,12 +68,12 @@
     const SUPABASE_URL = 'https://yeotqaorheaxjppylfgg.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_sUx3gtUhP6hHPhnxrACBnQ_5FsbVTOW';
 
-    // 変数名を _supabase に変更してバグを修正
-    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // 変数名を dbClient に変更して名前の衝突を完全に防止！
+    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // 投稿一覧を取得して表示する関数
     async function fetchPosts() {
-      const { data, error } = await _supabase
+      const { data, error } = await dbClient
         .from('posts')
         .select('*')
         .order('id', { ascending: true });
@@ -86,7 +86,6 @@
 
       const postsDiv = document.getElementById('posts');
 
-      // 投稿が0件の場合のメッセージ
       if (!data || data.length === 0) {
         postsDiv.innerHTML = 'まだ書き込みがありません。最初のレスを投稿してみよう！';
         return;
@@ -118,7 +117,7 @@
         return;
       }
 
-      const { error } = await _supabase
+      const { error } = await dbClient
         .from('posts')
         .insert([{ name: nameInput, content: contentInput }]);
 
