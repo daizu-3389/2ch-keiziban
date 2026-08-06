@@ -5,71 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>名無し世界の掲示板</title>
     <style>
-        /* 2ch全盛期のパピルス背景と無骨なテキスト */
-        body { background-color: #fafaf0; color: #000000; font-family: "MS Pゴシック", "MS PGothic", "Mona", "Noto Sans JP", sans-serif; font-size: 14px; margin: 12px; padding: 0; line-height: 1.4; }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { background-color: #fafaf0; color: #000; font-family: "MS Pゴシック", "MS PGothic", "Mona", "Noto Sans JP", sans-serif; font-size: 14px; margin: 12px; padding: 0; line-height: 1.4; }
         a { color: #0000ff; text-decoration: underline; cursor: pointer; }
         a:hover { color: #ff0000; }
         
         .view-section { display: none; }
         .view-section.active { display: block; }
         
-        /* テキストナビバー */
         .nav-text { font-size: 12px; background-color: #efefef; border: 1px solid #ccc; padding: 4px 8px; margin-bottom: 15px; color: #333; }
-        
         h1.site-title { color: #ff0000; font-size: 26px; text-align: center; margin: 0; font-weight: bold; }
         .sub-title { font-size: 12px; text-align: center; margin-bottom: 20px; color: #000; }
 
-        /* 🔄 左右2分割レイアウト用のスタイル */
         .split-container { display: flex; gap: 15px; margin-top: 15px; align-items: flex-start; }
-        
-        /* 📁 左側：常時表示のコンパクト板一覧（サイドバー） */
         .sidebar-box { width: 220px; flex-shrink: 0; background-color: #efefef; border: 1px solid #ccc; padding: 10px; max-height: 85vh; overflow-y: auto; position: sticky; top: 10px; }
         .sidebar-box .cat-title { font-weight: bold; color: #af0000; margin-top: 10px; font-size: 12px; border-bottom: 1px dashed #999; padding-bottom: 2px; }
         .sidebar-box .cat-title:first-child { margin-top: 0; }
         .sidebar-box .board-links-area { padding: 4px 0 4px 5px; line-height: 1.7; }
         .sidebar-box .board-link { font-size: 12px; margin-right: 8px; display: inline-block; }
 
-        /* 📖 右側：メインコンテンツ表示エリア */
         .main-content-box { flex-grow: 1; min-width: 0; }
-
-        /* 💬 スレッド一覧 */
         .board-title { color: #ff0000; font-size: 20px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
         .thread-list-box { background-color: #fff; border: 1px solid #ccc; padding: 10px; }
         .thread-line { margin-bottom: 6px; font-size: 14px; }
-
-        /* 📖 スレッド内部（伝統のdt/dd構造） */
         .thread-header-title { color: #ff0000; font-size: 22px; font-weight: bold; margin: 10px 0 15px 0; border-bottom: 2px solid #ff0000; padding-bottom: 3px; }
         
-        /* レス一覧をスクロール可能にして、書き込みフォームが隠れないように調整 */
         .posts-box { background-color: #fff; border: 1px solid #ccc; padding: 15px; max-height: 55vh; overflow-y: auto; }
-        
         .post-group { scroll-margin-top: 40px; }
         .post-group:target { background-color: #fff0cc; }
-
         .post-dt { font-size: 13px; margin-top: 16px; color: #000; }
         .post-dt b { color: #008000; } 
         .post-id { color: #666; font-family: monospace; margin-left: 5px; }
         .post-dd { margin-left: 25px; margin-top: 2px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-all; font-size: 14px; color: #000; }
-
         .res-anchor { color: #0000ff; text-decoration: underline; cursor: pointer; }
-        /* 🔍 レスプレビューポップアップ */
+
         #res-preview-popup {
-            display: none; position: fixed; z-index: 5000;
-            background: #fffff0; border: 1px solid #999; padding: 8px 10px;
-            max-width: 380px; min-width: 200px; font-size: 12px;
-            box-shadow: 3px 3px 10px rgba(0,0,0,0.25);
-            pointer-events: none; line-height: 1.5;
+            display: none; position: fixed; z-index: 5000; background: #fffff0; border: 1px solid #999; padding: 8px 10px;
+            max-width: 380px; min-width: 200px; font-size: 12px; box-shadow: 3px 3px 10px rgba(0,0,0,0.25); pointer-events: none; line-height: 1.5;
         }
         #res-preview-popup.visible { display: block; }
         #res-preview-popup .rp-dt { color: #333; margin-bottom: 4px; border-bottom: 1px dashed #bbb; padding-bottom: 3px; }
         #res-preview-popup .rp-dt b { color: #008000; }
         #res-preview-popup .rp-dd { color: #000; white-space: pre-wrap; word-break: break-all; max-height: 180px; overflow: hidden; }
-        body.dark #res-preview-popup { background: #1e2a1e; border-color: #555; color: #ccc; }
-        body.dark #res-preview-popup .rp-dt { color: #aaa; border-color: #444; }
-        body.dark #res-preview-popup .rp-dt b { color: #66bb66; }
-        body.dark #res-preview-popup .rp-dd { color: #ccc; }
 
-        /* 📝 書き込みフォーム */
         .form-container { background-color: #efefef; border: 1px solid #ccc; padding: 10px; margin-top: 20px; max-width: 600px; }
         .form-container h3 { margin: 0 0 10px 0; font-size: 13px; color: #af0000; border-bottom: 1px solid #ccc; padding-bottom: 2px; }
         .form-row { margin-bottom: 6px; }
@@ -79,114 +57,92 @@
         .btn-submit { font-size: 12px; font-weight: bold; padding: 2px 15px; cursor: pointer; background: #eee; border: 1px solid #666; color: #000; }
         .btn-submit:hover { background: #ddd; }
 
-        /* 🔍 スレッド検索ボックス */
-        .thread-search-box { width: 100%; box-sizing: border-box; padding: 4px 8px; font-size: 13px; border: 1px solid #aaa; margin-bottom: 8px; background: #fff; color: #000; }
-        /* 🖼️ 投稿画像 */
+        .thread-search-box { width: 100%; padding: 4px 8px; font-size: 13px; border: 1px solid #aaa; margin-bottom: 8px; background: #fff; color: #000; }
         .img-toggle-btn { font-size: 11px; color: #0066cc; background: none; border: 1px solid #0066cc; border-radius: 3px; padding: 1px 6px; cursor: pointer; margin-top: 4px; display: inline-block; }
         .img-toggle-btn:hover { background: #e8f0fe; }
         .post-img { max-width: 100%; max-height: 300px; display: none; margin-top: 4px; border: 1px solid #ccc; cursor: zoom-in; border-radius: 2px; }
         .post-img.open { display: block; }
-        /* 🔍 ライトボックス */
         #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
         #lightbox.active { display: flex; }
         #lightbox img { max-width: 95vw; max-height: 90vh; object-fit: contain; border-radius: 4px; cursor: zoom-out; }
         #lightbox-close { position: absolute; top: 12px; right: 18px; color: #fff; font-size: 28px; cursor: pointer; line-height: 1; }
         .res-count { font-size: 11px; color: #666; margin-left: 8px; }
-        /* 🔒 名前ロック時の見た目（灰色にして操作不可にする） */
         input:disabled { background-color: #e0e0e0 !important; color: #666 !important; cursor: not-allowed; }
 
-        /* 📱 スマートフォン・タブレット向け最適化スタイル */
-        *, *::before, *::after { box-sizing: border-box; }
+        /* 📄 利用規約モーダル */
+        #termsModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; justify-content: center; align-items: center; }
+        .terms-card { background: #fafaf0; border: 2px solid #ff0000; padding: 20px; max-width: 500px; width: 92%; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .terms-card h2 { color: #ff0000; font-size: 18px; margin: 0 0 10px 0; border-bottom: 2px solid #ff0000; padding-bottom: 5px; text-align: center; }
+        .terms-card ol { font-size: 12px; line-height: 1.6; padding-left: 20px; margin: 10px 0; }
+        .terms-card li { margin-bottom: 6px; }
 
         @media (max-width: 768px) {
             body { margin: 8px; font-size: 13px; }
             h1.site-title { font-size: 22px; }
             .sub-title { font-size: 11px; margin-bottom: 15px; }
-
-            /* 2分割から縦並びの1カラムレイアウトへ変更 */
             .split-container { flex-direction: column; gap: 10px; margin-top: 10px; }
-            
-            /* 板メニューを横幅いっぱいに広げ、高さを適度に制限してスクロール可能に */
-            .sidebar-box { 
-                width: 100%; 
-                position: static; 
-                max-height: 200px; 
-                margin-bottom: 10px; 
-            }
-
-            /* メインコンテンツエリアを画面幅いっぱいに */
+            .sidebar-box { width: 100%; position: static; max-height: 200px; margin-bottom: 10px; }
             .main-content-box { width: 100%; }
-
-            /* レスのインデント（左余白）を浅くして、スマホの狭い画面を有効活用 */
             .post-dd { margin-left: 10px; margin-top: 4px; }
-
-            /* スマホ表示時はキーボードが出て狭くなるため、レス一覧の高さを一回りコンパクトに調整 */
             .posts-box { max-height: 35vh; }
-
-            /* 書き込みフォームのスマホ最適化（縦並びにしてタップしやすく） */
             .form-container { width: 100%; max-width: 100%; padding: 12px; }
             .form-row label { display: block; width: 100%; margin-bottom: 4px; font-size: 13px; }
-            .form-row input[type="text"],
-            .form-row textarea { 
-                width: 100%; 
-                max-width: 100%; 
-                font-size: 15px; 
-                padding: 6px;
-            }
-            .btn-submit { 
-                width: 100%; 
-                padding: 8px; 
-                font-size: 14px; 
-                margin-top: 5px;
-            }
-
-            /* 🛠️ 管理者部屋のスマホ表示最適化スタイル */
-            #adminView > div[style*="display: flex"] {
-                flex-direction: column !important;
-                gap: 10px !important;
-            }
+            .form-row input[type="text"], .form-row textarea { width: 100%; max-width: 100%; font-size: 15px; padding: 6px; }
+            .btn-submit { width: 100%; padding: 8px; font-size: 14px; margin-top: 5px; }
+            #adminView > div[style*="display: flex"] { flex-direction: column !important; gap: 10px !important; }
             #adminLogArea { height: 40vh !important; }
             #adminAlertArea, #adminUserList { height: 25vh !important; }
-            .admin-delete-btn, .admin-warn-btn {
-                padding: 6px 12px !important;
-                font-size: 12px !important;
-                margin: 4px 2px !important;
-                display: inline-block;
-            }
+            .admin-delete-btn, .admin-warn-btn { padding: 6px 12px !important; font-size: 12px !important; margin: 4px 2px !important; display: inline-block; }
         }
+
         /* 🌙 ダークモード */
         body.dark { background-color: #1a1a1a !important; color: #d0d0d0 !important; }
         body.dark a { color: #7799ff; }
         body.dark a:hover { color: #ff6666; }
         body.dark .nav-text { background-color: #2a2a2a; border-color: #444; color: #bbb; }
-        body.dark .sidebar-box { background-color: #242424; border-color: #444; }
-        body.dark .sidebar-box .cat-title { color: #ff6666; border-color: #555; }
-        body.dark .board-title { color: #ff6666; border-color: #444; }
-        body.dark .thread-list-box { background-color: #1e1e1e; border-color: #444; }
-        body.dark .posts-box { background-color: #1e1e1e; border-color: #444; }
+        body.dark .sidebar-box, body.dark .thread-list-box, body.dark .posts-box, body.dark .form-container { background-color: #242424; border-color: #444; }
+        body.dark .sidebar-box .cat-title, body.dark .board-title, body.dark .form-container h3, body.dark .thread-header-title { color: #ff6666; border-color: #444; }
         body.dark .post-dt { color: #bbb; }
         body.dark .post-dt b { color: #66bb66; }
         body.dark .post-id { color: #888; }
         body.dark .post-dd { color: #ccc; }
         body.dark .post-group:target { background-color: #3a3200; }
-        body.dark .form-container { background-color: #242424; border-color: #444; }
-        body.dark .form-container h3 { color: #ff6666; border-color: #444; }
-        body.dark .form-row input[type="text"],
-        body.dark .form-row textarea,
-        body.dark .thread-search-box { background: #2e2e2e !important; color: #d0d0d0 !important; border-color: #555 !important; }
+        body.dark .form-row input[type="text"], body.dark .form-row textarea, body.dark .thread-search-box, body.dark #weatherRegionSelect { background: #2e2e2e !important; color: #d0d0d0 !important; border-color: #555 !important; }
         body.dark .btn-submit { background: #333; border-color: #666; color: #ccc; }
         body.dark .btn-submit:hover { background: #444; }
-        body.dark .thread-header-title { color: #ff6666; border-color: #ff6666; }
         body.dark .res-anchor { color: #7799ff; }
         body.dark .post-img { border-color: #555; }
         body.dark #lightbox { background: rgba(0,0,0,0.92); }
         body.dark .img-toggle-btn { color: #7799ff; border-color: #7799ff; }
         body.dark .img-toggle-btn:hover { background: #2a3050; }
+        body.dark #res-preview-popup { background: #1e2a1e; border-color: #555; color: #ccc; }
+        body.dark #res-preview-popup .rp-dt { color: #aaa; border-color: #444; }
+        body.dark #res-preview-popup .rp-dt b { color: #66bb66; }
+        body.dark #res-preview-popup .rp-dd { color: #ccc; }
+        body.dark .terms-card { background: #242424; color: #d0d0d0; border-color: #ff6666; }
+        body.dark .terms-card h2 { color: #ff6666; border-color: #ff6666; }
         .dark-mode-btn { background: #eee; color: #555; border: 1px solid #aaa; border-radius: 3px; font-size: 11px; padding: 1px 7px; cursor: pointer; margin-left: 8px; vertical-align: middle; }
         body.dark .dark-mode-btn { background: #333; color: #ffd700; border-color: #666; }
     </style>
 </head>
 <body>
+
+    <!-- 📜 利用規約モーダル -->
+    <div id="termsModal">
+        <div class="terms-card">
+            <h2>📜 利用規約への同意</h2>
+            <p style="font-size:12px; margin-bottom:10px;">当掲示板をご利用いただく前に、以下の規約をお読みいただき同意してください。</p>
+            <ol>
+                <li><b>禁止事項:</b> 他者への誹謗中傷、荒らし行為、個人情報の書き込み、法令および公序良俗に反するコンテンツの投稿を禁止します。</li>
+                <li><b>NGワードおよび連投規制:</b> 不適切な言葉を含む書き込みや連続投稿は自動的に制限・削除される場合があります。</li>
+                <li><b>管理権限:</b> 運営・管理者は、規約違反と判断された投稿を予告なく削除・警告できる権利を有します。</li>
+                <li><b>免責事項:</b> 掲示板の利用により発生したいかなるトラブルや損害についても、当サイトは一切の責任を負いません。</li>
+            </ol>
+            <div style="text-align: center; margin-top: 15px;">
+                <button id="agreeTermsBtn" class="btn-submit" style="padding: 8px 20px; font-size: 13px; font-weight: bold; background: #ff0000; color: #fff; border: none; cursor: pointer;">規約に同意して掲示板を利用する</button>
+            </div>
+        </div>
+    </div>
 
     <div class="nav-text">
         <a id="navHomeBtn">■板一覧（ホーム）</a> ＞ <span id="currentLocationDisplay">トップページ</span>
@@ -203,6 +159,10 @@
             <div class="sidebar-box">
                 <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #666; border-bottom: 1px solid #ccc; padding-bottom: 2px;">📁 板メニュー</div>
                 <div id="bbsMenuArea"></div>
+                <div class="cat-title">⏳ 外部情報</div>
+                <div class="board-links-area">
+                    <a class="board-link" id="navWeatherBtn" style="font-weight:bold;">天気・地震情報</a>
+                </div>
             </div>
 
             <div class="main-content-box">
@@ -243,15 +203,55 @@
                     </div>
                 </div>
 
+                <!-- 🌤️ 天気・地震情報ビュー -->
+                <div id="weatherEarthquakeView" class="view-section">
+                    <div class="board-title">🌍 日本地域の天気・地震情報</div>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
+                        <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 12px; border: 1px solid #ccc;">
+                            <h3 style="color: #af0000; border-bottom: 1px dashed #999; margin: 0 0 10px 0; font-size: 14px;">☀️ 地域別 天気予報</h3>
+                            <select id="weatherRegionSelect" style="padding: 4px; font-size: 13px; margin-bottom: 10px; width: 100%; border: 1px solid #aaa; background: #fff; color: #000;">
+                                <option value="130000">東京都</option>
+                                <option value="016000">北海道（石狩・空知・後志）</option>
+                                <option value="020000">青森県</option><option value="030000">岩手県</option>
+                                <option value="040000">宮城県</option><option value="050000">秋田県</option>
+                                <option value="060000">山形県</option><option value="070000">福島県</option>
+                                <option value="080000">茨城県</option><option value="090000">栃木県</option>
+                                <option value="100000">群馬県</option><option value="110000">埼玉県</option>
+                                <option value="120000">千葉県</option><option value="140000">神奈川県</option>
+                                <option value="150000">新潟県</option><option value="160000">富山県</option>
+                                <option value="170000">石川県</option><option value="180000">福井県</option>
+                                <option value="190000">山梨県</option><option value="200000">長野県</option>
+                                <option value="210000">岐阜県</option><option value="220000">静岡県</option>
+                                <option value="230000">愛知県</option><option value="240000">三重県</option>
+                                <option value="250000">滋賀県</option><option value="260000">京都府</option>
+                                <option value="270000">大阪府</option><option value="280000">兵庫県</option>
+                                <option value="290000">奈良県</option><option value="300000">和歌山県</option>
+                                <option value="310000">鳥取県</option><option value="320000">島根県</option>
+                                <option value="330000">岡山県</option><option value="340000">広島県</option>
+                                <option value="350000">山口県</option><option value="360000">徳島県</option>
+                                <option value="370000">香川県</option><option value="380000">愛媛県</option>
+                                <option value="390000">高知県</option><option value="400000">福岡県</option>
+                                <option value="410000">佐賀県</option><option value="420000">長崎県</option>
+                                <option value="430000">熊本県</option><option value="440000">大分県</option>
+                                <option value="450000">宮崎県</option><option value="460100">鹿児島県</option>
+                                <option value="471000">沖縄県</option>
+                            </select>
+                            <div id="weatherResultArea" style="font-size: 13px; line-height: 1.6; min-height: 100px;">選択した地域の天気を読み込み中...</div>
+                        </div>
+                        <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 12px; border: 1px solid #ccc;">
+                            <h3 style="color: #af0000; border-bottom: 1px dashed #999; margin: 0 0 10px 0; font-size: 14px;">🌋 最近の地震情報 (最新5件)</h3>
+                            <div id="earthquakeResultArea" style="font-size: 13px; line-height: 1.6; min-height: 100px;">地震情報を取得中...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="adminView" class="view-section">
                     <div class="board-title" style="color: #000080; border-bottom: 2px solid #000080;">🛠️ 管理者専用 リアルタイム監視ロビー</div>
-                    
                     <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
                         <div style="flex: 2; min-width: 300px;">
                             <h3 style="font-size: 13px; color: #000080; margin: 0 0 5px 0; font-weight: bold;">📋 全掲示板リアルタイムログ (全件監視中)</h3>
                             <div id="adminLogArea" style="background: #fff; border: 1px solid #ccc; padding: 10px; height: 60vh; overflow-y: auto;"></div>
                         </div>
-                        
                         <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 15px;">
                             <div>
                                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
@@ -289,7 +289,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
 
             </div>
@@ -300,23 +299,28 @@
     <script type="module">
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
+        // 📜 利用規約同意チェック
+        const termsModal = document.getElementById("termsModal");
+        if (localStorage.getItem("bbs_terms_agreed") === "1") {
+            termsModal.style.display = "none";
+        }
+        document.getElementById("agreeTermsBtn").addEventListener("click", () => {
+            localStorage.setItem("bbs_terms_agreed", "1");
+            termsModal.style.display = "none";
+        });
+
         // ⚡ Supabase設定
         const SUPABASE_URL = "https://yeotqaorheaxjppylfgg.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inllb3RxYW9yaGVheGpwcHlsZmdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MzA1NzMsImV4cCI6MjEwMTUwNjU3M30.GqbadI7MCM3h6xT9Ro-OJVzjgjmVip9vn5G6iA9KxoM";
-
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ---------------------------------------------------------
-        // 🚨 【NGワードおよび荒らし対策の定義設定】
-        // ---------------------------------------------------------
-        const COOLDOWN_MS = 10000; // クールタイム 10秒
-        const MAX_LENGTH = 500;   // 文字数制限 500文字
+        const COOLDOWN_MS = 10000;
+        const MAX_LENGTH = 500;
         
         const NG_WORDS = [
-            "しね", "死ね", "ころす", "殺す", "あらし", "荒らし", 
-            "がいじ", "ガイジ", "きちがい", "キチガイ", "はげ", "ハゲ", "ばいしゅん", "売春", 
-            "さぎ", "詐欺", "えろ", "エロ", "ぱぱかつ", "パパ活", "であいけい", "出会い系", 
-            "さつがい", "殺害", "にーと", "ニート", "ごきぶり", "ゴキブリ", 
+            "しね", "死ね", "ころす", "殺す", "あらし", "荒らし", "がいじ", "ガイジ", "きちがい", "キチガイ", 
+            "はげ", "ハゲ", "ばいしゅん", "売春", "さぎ", "詐欺", "えろ", "エロ", "ぱぱかつ", "パパ活", 
+            "であいけい", "出会い系", "さつがい", "殺害", "にーと", "ニート", "ごきぶり", "ゴキブリ", 
             "ちんこ", "まんこ", "せっくす", "さっちゃん", "荒らして", "あらす", "ちん", "まん",
             "shine", "kill", "baka", "fucking", "fuck", "stalker", "スパム", "すぱむ",
             "ガイッ", "キチッ", "ガイ", "キチ", "池沼", "ちしょう"
@@ -325,9 +329,7 @@
         function normalizeForNgCheck(str) {
             if (!str) return "";
             let text = str.toLowerCase().replace(/[\s\s\t\n\r ・○●*＊_＿\-ー,、.。/／]/g, "");
-            text = text.replace(/[\u30a1-\u30f6]/g, function(match) {
-                return String.fromCharCode(match.charCodeAt(0) - 0x60);
-            });
+            text = text.replace(/[\u30a1-\u30f6]/g, m => String.fromCharCode(m.charCodeAt(0) - 0x60));
             const halfKanaMap = {
                 'ｱ':'あ','ｲ':'い','ｳ':'う','ｴ':'え','ｵ':'お','ｶ':'か','ｷ':'き','ｸ':'く','ｹ':'け','ｺ':'こ',
                 'ｻ':'さ','ｼ':'し','ｽ':'す','ｾ':'せ','ｿ':'そ','ﾀ':'た','ﾁ':'ち','ﾂ':'つ','ﾃ':'て','ﾄ':'と',
@@ -338,27 +340,22 @@
                 'ﾀﾞ':'だ','ﾁﾞ':'ぢ','ﾂﾞ':'づ','ﾃﾞ':'で','ﾄﾞ':'ど','ﾊﾞ':'ば','ﾋﾞ':'び','ﾌﾞ':'ぶ','ﾍﾞ':'べ','ﾎﾞ':'ぼ',
                 'ﾊﾟ':'ぱ','ﾋﾟ':'ぴ','ﾌﾟ':'ぷ','ﾍﾟ':'ぺ','ﾎﾟ':'ぽ','ｯ':'っ','ｬ':'ゃ','ｭ':'ゅ','ｮ':'ょ'
             };
-            for (let k in halfKanaMap) {
-                text = text.split(k).join(halfKanaMap[k]);
-            }
+            for (let k in halfKanaMap) text = text.split(k).join(halfKanaMap[k]);
             return text;
         }
 
         function validatePost(text, title = "") {
             const now = Date.now();
-
             const warnedUntil = localStorage.getItem("bbs_warned_until");
             if (warnedUntil && parseInt(warnedUntil) > now) {
                 const waitSec = Math.ceil((parseInt(warnedUntil) - now) / 1000);
-                alert(`⚠️ 警告を受けたため、書き込みが制限されています。\nあと ${waitSec} 秒後に書き込めます。`);
+                alert(`⚠️ 警告を受けたため制限されています。\nあと ${waitSec} 秒後に書き込めます。`);
                 return false;
             }
-
             if (text.length > MAX_LENGTH || title.length > MAX_LENGTH) {
                 alert(`長すぎます。${MAX_LENGTH}文字以内で書いてください。`);
                 return false;
             }
-
             const lastPostTime = localStorage.getItem("bbs_last_post_time");
             if (lastPostTime && (now - parseInt(lastPostTime) < COOLDOWN_MS)) {
                 const waitTime = Math.ceil((COOLDOWN_MS - (now - parseInt(lastPostTime))) / 1000);
@@ -374,56 +371,24 @@
 
         function parsePostText(text) {
             if (!text) return "";
-            let escaped = text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-            
+            let escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
             return escaped.replace(/&gt;&gt;(\d+)/g, '<a class="res-anchor" data-resnum="$1">&gt;&gt;$1</a>');
         }
 
         const BOARD_DATA = {
-            "■ 地震・速報・実況": {
-                "namazu": "緊急地震速報", "headline": "ニュース速報", "livegalileo": "なんでも実況G", "liveanb": "実況ch", "livecx": "フジテレビ実況", "livetbs": "TBS実況", "livenhk": "NHK総合実況", "liventv": "日本テレビ実況", "liveasahi": "テレビ朝日実況", "livetx": "テレビ東京実況"
-            },
-            "■ ニュース・社会事情": {
-                "newsplus": "ニュース速報＋", "mnewsplus": "芸スポ速報＋", "news4plus": "東アジアニュース＋", "dqnplus": "痛いニュース＋", "bizplus": "ビジネスニュース＋", "scienceplus": "科学ニュース＋", "wildplus": "国際ニュース＋", "shakai": "社会・世評", "justice": "裁判・司法"
-            },
-            "■ ネット機能・雑談": {
-                "vip": "ニュー速VIP", "news4vip": "ニュー速VIP+", "zatsudan": "なんでも雑談", "morning": "朝生雑談", "tomorrow": "明日があるさ", "alone": "一人でお留守番", "lobby": "ロビー", "welcome": "新機能お試し"
-            },
-            "■ ゲーム・ハード・実況": {
-                "game": "ゲーム実況", "smartphone": "スマホゲーム", "netgame": "ネトゲ実況", "hard": "ゲームハード", "retro": "レトロゲーム", "rpg": "RPG", "arc": "アーケード", "ff": "FF・DQ", "gal": "エロゲ批評", "board": "卓上ゲーム"
-            },
-            "■ アニメ・漫画・特撮": {
-                "anime": "アニメ・マンガ", "comic": "少年漫画", "rcomic": "4コマ漫画", "voice": "声優", "moe": "萌えニュース", "subcul": "サブカル", "sfx": "特撮", "illust": "イラスト・CG"
-            },
-            "■ コンピュータ・ガジェット": {
-                "pc": "PC・ガジェット", "jisaku": "自作PC", "mac": "Mac", "linux": "Linux", "iphone": "iPhone", "android": "Android", "software": "ソフトウェア", "program": "プログラミング", "network": "インターネット"
-            },
-            "■ 趣味・娯楽・オカルト": {
-                "occult": "オカルト・都市伝説", "poverty": "ニュー速(嫌儲)", "army": "軍事・ミリタリー", "rail": "鉄道", "airline": "航空・飛行機", "car": "車・バイク", "camera": "カメラ", "watch": "時計", "uranai": "占い", "survival": "サバイバル"
-            },
-            "■ スポーツ・公営ギャンブル": {
-                "baseball": "プロ野球速報", "soccer": "日本代表蹴球", "samurai": "野球日本代表", "sumo": "相撲", "basket": "バスケット", "keiba": "競馬", "kyotei": "競艇", "pachinko": "パチンコ・パチスロ"
-            },
-            "■ 芸能・音楽・映画": {
-                "idol": "地下アイドル", "akb": "AKB48", "smap": "ジャニーズ", "m芸能": "芸能人・有名人", "music": "邦楽", "musicg": "洋楽", "cinema": "映画一般", "visual": "ヴィジュアル系", "drama": "テレビドラマ"
-            },
-            "■ 学問・理数・人文": {
-                "history": "日本史", "whistory": "世界史", "physics": "物理", "math": "数学", "psy": "心理学", "gengo": "言語学", "philosophy": "哲学", "keizai": "経済学", "space": "宇宙・天文学"
-            },
-            "■ 生活・家庭・美容": {
-                "cook": "料理・レシピ", "kankon": "冠婚葬祭", "baby": "育児・子育て", "kaden": "家電製品", "interior": "インテリア", "diet": "ダイエット", "mensbeauty": "メンズ美容", "fashion": "洋服・ファッション"
-            },
-            "■ 人生・メンタル・コミュニティ": {
-                "lonely": "ぼっち・馴れ合い", "mental": "メンタルヘルス", "meikyu": "人生相談", "debt": "借金・生活苦", "job": "転職・就職", "part": "アルバイト", "shikaku": "資格全全", "jinsei": "生き方・人生"
-            },
-            "■ 各地・地域ローカル": {
-                "hokkaido": "北海道", "tohoku": "東北", "tokyo": "東京", "kanagawa": "神奈川", "tokai": "東海", "kinki": "近畿", "osaka": "大阪", "chugoku": "中国地方", "shikoku": "四重", "kyushu": "九州"
-            }
+            "■ 地震・速報・実況": { "namazu": "緊急地震速報", "headline": "ニュース速報", "livegalileo": "なんでも実況G", "liveanb": "実況ch", "livecx": "フジテレビ実況", "livetbs": "TBS実況", "livenhk": "NHK総合実況", "liventv": "日本テレビ実況", "liveasahi": "テレビ朝日実況", "livetx": "テレビ東京実況" },
+            "■ ニュース・社会事情": { "newsplus": "ニュース速報＋", "mnewsplus": "芸スポ速報＋", "news4plus": "東アジアニュース＋", "dqnplus": "痛いニュース＋", "bizplus": "ビジネスニュース＋", "scienceplus": "科学ニュース＋", "wildplus": "国際ニュース＋", "shakai": "社会・世評", "justice": "裁判・司法" },
+            "■ ネット機能・雑談": { "vip": "ニュー速VIP", "news4vip": "ニュー速VIP+", "zatsudan": "なんでも雑談", "morning": "朝生雑談", "tomorrow": "明日があるさ", "alone": "一人でお留守番", "lobby": "ロビー", "welcome": "新機能お試し" },
+            "■ ゲーム・ハード・実況": { "game": "ゲーム実況", "smartphone": "スマホゲーム", "netgame": "ネトゲ実況", "hard": "ゲームハード", "retro": "レトロゲーム", "rpg": "RPG", "arc": "アーケード", "ff": "FF・DQ", "gal": "エロゲ批評", "board": "卓上ゲーム" },
+            "■ アニメ・漫画・特撮": { "anime": "アニメ・マンガ", "comic": "少年漫画", "rcomic": "4コマ漫画", "voice": "声優", "moe": "萌えニュース", "subcul": "サブカル", "sfx": "特撮", "illust": "イラスト・CG" },
+            "■ コンピュータ・ガジェット": { "pc": "PC・ガジェット", "jisaku": "自作PC", "mac": "Mac", "linux": "Linux", "iphone": "iPhone", "android": "Android", "software": "ソフトウェア", "program": "プログラミング", "network": "インターネット" },
+            "■ 趣味・娯楽・オカルト": { "occult": "オカルト・都市伝説", "poverty": "ニュー速(嫌儲)", "army": "軍事・ミリタリー", "rail": "鉄道", "airline": "航空・飛行機", "car": "車・バイク", "camera": "カメラ", "watch": "時計", "uranai": "占い", "survival": "サバイバル" },
+            "■ スポーツ・公営ギャンブル": { "baseball": "プロ野球速報", "soccer": "日本代表蹴球", "samurai": "野球日本代表", "sumo": "相撲", "basket": "バスケット", "keiba": "競馬", "kyotei": "競艇", "pachinko": "パチンコ・パチスロ" },
+            "■ 芸能・音楽・映画": { "idol": "地下アイドル", "akb": "AKB48", "smap": "ジャニーズ", "m芸能": "芸能人・有名人", "music": "邦楽", "musicg": "洋楽", "cinema": "映画一般", "visual": "ヴィジュアル系", "drama": "テレビドラマ" },
+            "■ 学問・理数・人文": { "history": "日本史", "whistory": "世界史", "physics": "物理", "math": "数学", "psy": "心理学", "gengo": "言語学", "philosophy": "哲学", "keizai": "経済学", "space": "宇宙・天文学" },
+            "■ 生活・家庭・美容": { "cook": "料理・レシピ", "kankon": "冠婚葬祭", "baby": "育児・子育て", "kaden": "家電製品", "interior": "インテリア", "diet": "ダイエット", "mensbeauty": "メンズ美容", "fashion": "洋服・ファッション" },
+            "■ 人生・メンタル・コミュニティ": { "lonely": "ぼっち・馴れ合い", "mental": "メンタルヘルス", "meikyu": "人生相談", "debt": "借金・生活苦", "job": "転職・就職", "part": "アルバイト", "shikaku": "資格全全", "jinsei": "生き方・人生" },
+            "■ 各地・地域ローカル": { "hokkaido": "北海道", "tohoku": "東北", "tokyo": "東京", "kanagawa": "神奈川", "tokai": "東海", "kinki": "近畿", "osaka": "大阪", "chugoku": "中国地方", "shikoku": "四重", "kyushu": "九州" }
         };
 
         const ALL_BOARDS = {};
@@ -435,10 +400,12 @@
         const welcomeView = document.getElementById("welcomeView");
         const threadListView = document.getElementById("threadListView");
         const threadDetailView = document.getElementById("threadDetailView");
+        const weatherEarthquakeView = document.getElementById("weatherEarthquakeView");
         const adminView = document.getElementById("adminView");
 
         const navHomeBtn = document.getElementById("navHomeBtn");
         const navAdminBtn = document.getElementById("navAdminBtn");
+        const navWeatherBtn = document.getElementById("navWeatherBtn");
         const currentLocationDisplay = document.getElementById("currentLocationDisplay");
         const currentBoardTitleDisplay = document.getElementById("currentBoardTitleDisplay");
         const threadList = document.getElementById("threadList");
@@ -455,20 +422,16 @@
 
         let currentBoardId = ""; 
         let currentThreadId = null;
-
         let currentThreadChannel = null;
         let currentPostChannel = null;
 
         const myUid = getTodayID();
-
-        // 👥 Supabase Presence を使用したリアルタイム同時接続人数の計測
         const presenceChannel = supabase.channel('online-users');
 
         presenceChannel
             .on('presence', { event: 'sync' }, () => {
                 const newState = presenceChannel.presenceState();
-                const userUids = Object.keys(newState);
-                const count = userUids.length;
+                const count = Object.keys(newState).length;
 
                 document.getElementById("onlineCount").textContent = count;
                 const adminOnlineCount = document.getElementById("adminOnlineCount");
@@ -482,8 +445,7 @@
                             const userPresence = newState[id][0];
                             const uid = userPresence ? userPresence.uid : id;
                             const div = document.createElement("div");
-                            div.style.fontSize = "12px";
-                            div.style.padding = "2px 0";
+                            div.style.cssText = "font-size:12px; padding:2px 0;";
                             div.innerHTML = `・ID: <span style="font-family:monospace;font-weight:bold;color:#008000;">${uid}</span> ${uid === myUid ? '<span style="color:#666;">(あなた)</span>' : ''}`;
                             adminUserList.appendChild(div);
                         }
@@ -498,24 +460,16 @@
                 }
             });
 
-        // 👑 管理者からの警告通知をリアルタイム受信 (Supabase Realtime)
         supabase.channel(`user-warning-${myUid}`)
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'warnings',
-                filter: `target_uid=eq.${myUid}`
-            }, (payload) => {
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'warnings', filter: `target_uid=eq.${myUid}` }, payload => {
                 const data = payload.new;
                 if (data && (Date.now() - data.timestamp < 60000)) {
-                    const banUntil = Date.now() + 30000;
-                    localStorage.setItem("bbs_warned_until", banUntil);
-                    alert(`🚨【管理者からの警告通知】🚨\n\n${data.message}\n\n⏱️ この通知を受け取ったため、30秒間は書き込みができません。`);
+                    localStorage.setItem("bbs_warned_until", Date.now() + 30000);
+                    alert(`🚨【管理者からの警告通知】🚨\n\n${data.message}\n\n⏱️ 30秒間は書き込みができません。`);
                 }
             })
             .subscribe();
 
-        // 🔒 名前の一時ロック・管理機能（24時間制限）
         function checkNameLock() {
             const lockUntil = localStorage.getItem("bbs_name_lock_until");
             const lockedName = localStorage.getItem("bbs_locked_username");
@@ -530,9 +484,7 @@
                 postNameInput.disabled = true;
 
                 const remainingMs = parseInt(lockUntil) - now;
-                const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
-                const remainingMins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-                const lockLabel = `🔒 あと${remainingHours}時間${remainingMins}分変更不可`;
+                const lockLabel = `🔒 あと${Math.floor(remainingMs / 3600000)}時間${Math.floor((remainingMs % 3600000) / 60000)}分変更不可`;
                 threadCreatorNameInput.title = lockLabel;
                 postNameInput.title = lockLabel;
                 if (threadLockMsg) threadLockMsg.textContent = lockLabel;
@@ -559,9 +511,7 @@
             if (lockUntil && parseInt(lockUntil) > Date.now()) return;
 
             const nominatedName = name.trim() || "名無しさん";
-            const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-            
-            localStorage.setItem("bbs_name_lock_until", Date.now() + TWENTY_FOUR_HOURS);
+            localStorage.setItem("bbs_name_lock_until", Date.now() + 86400000);
             localStorage.setItem("bbs_locked_username", nominatedName);
             localStorage.setItem("bbs_saved_username", nominatedName);
             checkNameLock();
@@ -576,7 +526,6 @@
 
         threadCreatorNameInput.addEventListener("input", (e) => saveName(e.target.value));
         postNameInput.addEventListener("input", (e) => saveName(e.target.value));
-        
         checkNameLock();
 
         function getTodayID() {
@@ -610,11 +559,9 @@
                 linksWrapper.className = "board-links-area";
                 
                 for (let boardId in BOARD_DATA[categoryName]) {
-                    const boardName = BOARD_DATA[categoryName][boardId];
                     const a = document.createElement("a");
                     a.className = "board-link";
-                    a.textContent = boardName;
-                    a.style.cursor = "pointer";
+                    a.textContent = BOARD_DATA[categoryName][boardId];
                     a.addEventListener("click", () => switchBoard(boardId));
                     linksWrapper.appendChild(a);
                     linksWrapper.appendChild(document.createTextNode(" "));
@@ -623,14 +570,15 @@
             }
         }
 
+        function hideAllViews() {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        }
+
         function switchBoard(boardId) {
             currentBoardId = boardId;
             currentLocationDisplay.textContent = ALL_BOARDS[boardId];
             currentBoardTitleDisplay.textContent = `📂 ${ALL_BOARDS[boardId]} のスレッド一覧`;
-            
-            welcomeView.classList.remove("active");
-            threadDetailView.classList.remove("active");
-            adminView.classList.remove("active");
+            hideAllViews();
             threadListView.classList.add("active");
             loadThreadList(boardId);
         }
@@ -640,14 +588,19 @@
             if (currentPostChannel) supabase.removeChannel(currentPostChannel);
             currentThreadId = null;
             currentLocationDisplay.textContent = "トップページ";
-            threadListView.classList.remove("active");
-            threadDetailView.classList.remove("active");
-            adminView.classList.remove("active");
+            hideAllViews();
             welcomeView.classList.add("active");
         });
 
+        navWeatherBtn.addEventListener("click", () => {
+            hideAllViews();
+            weatherEarthquakeView.classList.add("active");
+            currentLocationDisplay.textContent = "天気・地震情報";
+            loadWeatherData(document.getElementById('weatherRegionSelect').value);
+            loadEarthquakeData();
+        });
+
         let allThreadData = {}; 
-        let currentSearchBoardId = "";
 
         function renderThreadList(data, filter) {
             threadList.innerHTML = "";
@@ -665,7 +618,6 @@
 
                 const a = document.createElement("a");
                 a.textContent = thread.title;
-                a.style.cursor = "pointer";
                 a.addEventListener("click", () => openThread(id, thread.title));
 
                 const countSpan = document.createElement("span");
@@ -685,44 +637,25 @@
 
         async function loadThreadList(boardId) {
             if (currentThreadChannel) supabase.removeChannel(currentThreadChannel);
-            currentSearchBoardId = boardId;
             threadList.innerHTML = "<div style='color:#666; font-size:12px;'>読み込み中...</div>";
             const searchInput = document.getElementById("threadSearchInput");
             if (searchInput) searchInput.value = "";
 
             const fetchThreads = async () => {
-                const { data, error } = await supabase
-                    .from('threads')
-                    .select('*')
-                    .eq('board_id', boardId)
-                    .order('created_at', { ascending: false });
-
+                const { data, error } = await supabase.from('threads').select('*').eq('board_id', boardId).order('created_at', { ascending: false });
                 if (error) {
-                    console.error("スレッド取得エラー:", error);
                     threadList.innerHTML = "<div style='color:red; font-size:12px;'>スレッドの取得に失敗しました</div>";
                     return;
                 }
-
                 allThreadData = {};
-                (data || []).forEach(t => {
-                    allThreadData[t.id] = { title: t.title, replyCount: t.reply_count };
-                });
-                const kw = searchInput ? searchInput.value : "";
-                renderThreadList(allThreadData, kw);
+                (data || []).forEach(t => { allThreadData[t.id] = { title: t.title, replyCount: t.reply_count }; });
+                renderThreadList(allThreadData, searchInput ? searchInput.value : "");
             };
 
             await fetchThreads();
 
-            // Realtimeでスレッド一覧の変更を検知
             currentThreadChannel = supabase.channel(`board-threads-${boardId}`)
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'threads',
-                    filter: `board_id=eq.${boardId}`
-                }, () => {
-                    fetchThreads();
-                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'threads', filter: `board_id=eq.${boardId}` }, fetchThreads)
                 .subscribe();
         }
 
@@ -763,10 +696,8 @@
                 const pw = resPopup.offsetWidth, ph = resPopup.offsetHeight;
                 if (x + pw > vw - 8) x = vw - pw - 8;
                 if (y + ph > vh - 8) y = vh - ph - 8;
-                if (x < 4) x = 4;
-                if (y < 4) y = 4;
-                resPopup.style.left = x + "px";
-                resPopup.style.top = y + "px";
+                resPopup.style.left = Math.max(4, x) + "px";
+                resPopup.style.top = Math.max(4, y) + "px";
             } else {
                 resPopup.classList.remove("visible");
             }
@@ -775,15 +706,14 @@
         // 🔍 ライトボックス
         const lightbox = document.getElementById("lightbox");
         const lightboxImg = document.getElementById("lightbox-img");
-        const lightboxClose = document.getElementById("lightbox-close");
+        document.getElementById("lightbox-close").onclick = () => lightbox.classList.remove("active");
+        lightbox.onclick = (e) => { if (e.target === lightbox || e.target === lightboxImg) lightbox.classList.remove("active"); };
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") lightbox.classList.remove("active"); });
 
         function openLightbox(src) {
             lightboxImg.src = src;
             lightbox.classList.add("active");
         }
-        lightboxClose.onclick = () => lightbox.classList.remove("active");
-        lightbox.onclick = (e) => { if (e.target === lightbox || e.target === lightboxImg) lightbox.classList.remove("active"); };
-        document.addEventListener("keydown", (e) => { if (e.key === "Escape") lightbox.classList.remove("active"); });
 
         function readImageFile(fileInput) {
             return new Promise((resolve) => {
@@ -807,25 +737,15 @@
             currentThreadId = threadId;
             currentThreadTitle.textContent = threadTitle;
             currentLocationDisplay.textContent = threadTitle;
-            threadListView.classList.remove("active");
-            adminView.classList.remove("active");
+            hideAllViews();
             threadDetailView.classList.add("active");
 
             if (currentPostChannel) supabase.removeChannel(currentPostChannel);
-
             postList.innerHTML = "<div style='color:#666; font-size:12px;'>読み込み中...</div>";
 
             const fetchPosts = async () => {
-                const { data, error } = await supabase
-                    .from('posts')
-                    .select('*')
-                    .eq('thread_id', threadId)
-                    .order('created_at', { ascending: true });
-
-                if (error) {
-                    console.error("レス取得エラー:", error);
-                    return;
-                }
+                const { data, error } = await supabase.from('posts').select('*').eq('thread_id', threadId).order('created_at', { ascending: true });
+                if (error) return;
 
                 postList.innerHTML = "";
                 if (data) {
@@ -874,22 +794,13 @@
 
             await fetchPosts();
 
-            // Realtimeで対象スレッド内の投稿変更を検出
             currentPostChannel = supabase.channel(`thread-posts-${threadId}`)
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'posts',
-                    filter: `thread_id=eq.${threadId}`
-                }, () => {
-                    fetchPosts();
-                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'posts', filter: `thread_id=eq.${threadId}` }, fetchPosts)
                 .subscribe();
         }
 
         backToListViewBtn.addEventListener("click", () => {
-            threadDetailView.classList.remove("active");
-            adminView.classList.remove("active");
+            hideAllViews();
             threadListView.classList.add("active");
             currentLocationDisplay.textContent = ALL_BOARDS[currentBoardId];
             if (currentPostChannel) supabase.removeChannel(currentPostChannel);
@@ -907,70 +818,25 @@
 
             const timeStr = getNowString();
             const userId = getTodayID();
-
-            const normalizedTitle = normalizeForNgCheck(title);
-            const normalizedMsg = normalizeForNgCheck(firstMsg);
-            const hasNgWord = NG_WORDS.some(word => normalizedTitle.includes(word) || normalizedMsg.includes(word));
-
+            const hasNgWord = NG_WORDS.some(w => normalizeForNgCheck(title).includes(w) || normalizeForNgCheck(firstMsg).includes(w));
             const threadImgInput = document.getElementById("threadImageInput");
             const imgData = await readImageFile(threadImgInput);
 
-            // 1. スレッド作成
-            const { data: threadData, error: threadErr } = await supabase
-                .from('threads')
-                .insert([{
-                    board_id: currentBoardId,
-                    title: title,
-                    reply_count: 1
-                }])
-                .select()
-                .single();
-
-            if (threadErr) {
-                alert("スレッド作成エラー: " + threadErr.message);
-                return;
-            }
+            const { data: threadData, error: threadErr } = await supabase.from('threads').insert([{ board_id: currentBoardId, title: title, reply_count: 1 }]).select().single();
+            if (threadErr) return alert("スレッド作成エラー: " + threadErr.message);
 
             const newThreadId = threadData.id;
+            const { data: postData, error: postErr } = await supabase.from('posts').insert([{ thread_id: newThreadId, name: name, text: firstMsg, time: timeStr, uid: userId, image_data: imgData }]).select().single();
+            if (postErr) return alert("投稿作成エラー: " + postErr.message);
 
-            // 2. 最初の投稿作成
-            const { data: postData, error: postErr } = await supabase
-                .from('posts')
-                .insert([{
-                    thread_id: newThreadId,
-                    name: name,
-                    text: firstMsg,
-                    time: timeStr,
-                    uid: userId,
-                    image_data: imgData
-                }])
-                .select()
-                .single();
-
-            if (postErr) {
-                alert("投稿作成エラー: " + postErr.message);
-                return;
-            }
-
-            // 3. 管理者ログ追加
             await supabase.from('global_logs').insert([{
-                board_id: currentBoardId,
-                board_name: ALL_BOARDS[currentBoardId],
-                thread_id: newThreadId,
-                post_key: postData.id,
-                thread_title: title,
-                name: name,
-                text: firstMsg,
-                time: timeStr,
-                uid: userId,
-                type: "新規スレッド",
-                timestamp: Date.now(),
-                has_ng_word: hasNgWord
+                board_id: currentBoardId, board_name: ALL_BOARDS[currentBoardId], thread_id: newThreadId,
+                post_key: postData.id, thread_title: title, name: name, text: firstMsg, time: timeStr,
+                uid: userId, type: "新規スレッド", timestamp: Date.now(), has_ng_word: hasNgWord
             }]);
 
             lockName(name);
             updateLastPostTime();
-
             newThreadTitleInput.value = "";
             threadFirstMessageInput.value = "";
             if (threadImgInput) threadImgInput.value = "";
@@ -987,52 +853,21 @@
             
             const timeStr = getNowString();
             const userId = getTodayID();
-
             const postImgInput = document.getElementById("postImageInput");
             const imgData = await readImageFile(postImgInput);
+            const hasNgWord = NG_WORDS.some(w => normalizeForNgCheck(text).includes(w));
 
-            const normalizedText = normalizeForNgCheck(text);
-            const hasNgWord = NG_WORDS.some(word => normalizedText.includes(word));
+            const { data: postData, error: postErr } = await supabase.from('posts').insert([{ thread_id: currentThreadId, name: name, text: text, time: timeStr, uid: userId, image_data: imgData }]).select().single();
+            if (postErr) return alert("書き込みエラー: " + postErr.message);
 
-            // 1. レス作成
-            const { data: postData, error: postErr } = await supabase
-                .from('posts')
-                .insert([{
-                    thread_id: currentThreadId,
-                    name: name,
-                    text: text,
-                    time: timeStr,
-                    uid: userId,
-                    image_data: imgData
-                }])
-                .select()
-                .single();
-
-            if (postErr) {
-                alert("書き込みエラー: " + postErr.message);
-                return;
-            }
-
-            // 2. ログ追加
             await supabase.from('global_logs').insert([{
-                board_id: currentBoardId,
-                board_name: ALL_BOARDS[currentBoardId],
-                thread_id: currentThreadId,
-                post_key: postData.id,
-                thread_title: currentThreadTitle.textContent,
-                name: name,
-                text: text,
-                time: timeStr,
-                uid: userId,
-                type: "レス",
-                timestamp: Date.now(),
-                has_ng_word: hasNgWord
+                board_id: currentBoardId, board_name: ALL_BOARDS[currentBoardId], thread_id: currentThreadId,
+                post_key: postData.id, thread_title: currentThreadTitle.textContent, name: name, text: text,
+                time: timeStr, uid: userId, type: "レス", timestamp: Date.now(), has_ng_word: hasNgWord
             }]);
 
-            // 3. スレッドのレス数更新
             const { data: threadData } = await supabase.from('threads').select('reply_count').eq('id', currentThreadId).single();
-            const newCount = (threadData?.reply_count || 0) + 1;
-            await supabase.from('threads').update({ reply_count: newCount }).eq('id', currentThreadId);
+            await supabase.from('threads').update({ reply_count: (threadData?.reply_count || 0) + 1 }).eq('id', currentThreadId);
 
             lockName(name);
             updateLastPostTime();
@@ -1040,9 +875,7 @@
             if (postImgInput) postImgInput.value = "";
         });
 
-        // ---------------------------------------------------------
-        // 🛠️ 【管理者部屋のシステム（監視・荒らし自動検出）】
-        // ---------------------------------------------------------
+        // 🛠️ 管理者部屋
         let isAdminAuthenticated = false;
         let lastPostsByUid = {}; 
         let adminListeners = []; 
@@ -1058,27 +891,21 @@
                     return;
                 }
             }
-
-            welcomeView.classList.remove("active");
-            threadListView.classList.remove("active");
-            threadDetailView.classList.remove("active");
+            hideAllViews();
             adminView.classList.add("active");
             currentLocationDisplay.textContent = "管理者専用部屋";
-
             startAdminMonitor();
         });
 
         function playWarningSound() {
             try {
                 const context = new (window.AudioContext || window.webkitAudioContext)();
-                
-                let osc1 = context.createOscillator();
-                osc1.type = "sine";
-                osc1.frequency.setValueAtTime(660, context.currentTime);
-                osc1.connect(context.destination);
-                osc1.start();
-                osc1.stop(context.currentTime + 0.1);
-
+                let osc = context.createOscillator();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(660, context.currentTime);
+                osc.connect(context.destination);
+                osc.start();
+                osc.stop(context.currentTime + 0.1);
                 setTimeout(() => {
                     let osc2 = context.createOscillator();
                     osc2.type = "sine";
@@ -1087,9 +914,7 @@
                     osc2.start();
                     osc2.stop(context.currentTime + 0.1);
                 }, 150);
-            } catch (e) {
-                console.log("AudioContext エラー:", e);
-            }
+            } catch (e) {}
         }
 
         window.autoNgMode = localStorage.getItem("bbs_admin_auto_ng") === "true";
@@ -1099,17 +924,10 @@
             const knob = document.getElementById("autoNgToggleKnob");
             const label = document.getElementById("autoNgToggleLabel");
             if (!wrap) return;
-            if (window.autoNgMode) {
-                wrap.style.background = "#cc0000";
-                knob.style.left = "20px";
-                label.textContent = "自動処理: ON";
-                label.style.color = "#cc0000";
-            } else {
-                wrap.style.background = "#ccc";
-                knob.style.left = "2px";
-                label.textContent = "自動処理: OFF";
-                label.style.color = "#999";
-            }
+            wrap.style.background = window.autoNgMode ? "#cc0000" : "#ccc";
+            knob.style.left = window.autoNgMode ? "20px" : "2px";
+            label.textContent = window.autoNgMode ? "自動処理: ON" : "自動処理: OFF";
+            label.style.color = window.autoNgMode ? "#cc0000" : "#999";
         }
 
         document.getElementById("autoNgToggleWrap").addEventListener("click", () => {
@@ -1117,48 +935,38 @@
             localStorage.setItem("bbs_admin_auto_ng", window.autoNgMode);
             applyAutoNgToggleUI();
         });
-
         applyAutoNgToggleUI();
 
-        // 管理者用削除処理ハンドラ
         window.adminDeleteHandler = async function(btn) {
-            const boardId = btn.getAttribute("data-board");
             const threadId = btn.getAttribute("data-thread");
             const postKey = btn.getAttribute("data-post");
             const logKey = btn.getAttribute("data-logkey");
             const isThread = btn.getAttribute("data-is-thread") === "true";
 
             if (isThread) {
-                if (confirm("【⚠️警告⚠️】\n本当にこのスレッドを『丸ごと削除』しますか？\nスレッド内の全メッセージが完全に消去され元に戻せません。")) {
+                if (confirm("【⚠️警告⚠️】\n本当にこのスレッドを『丸ごと削除』しますか？")) {
                     if (threadId) {
                         await supabase.from('threads').delete().eq('id', threadId);
                         await supabase.from('posts').delete().eq('thread_id', threadId);
                         await supabase.from('global_logs').delete().eq('thread_id', threadId);
                         alert("スレッドを丸ごと完全削除しました。");
                         const adminPostListArea = document.getElementById("adminPostListArea");
-                        if (adminPostListArea) {
-                            adminPostListArea.innerHTML = "<div style='color:#666; font-style:italic;'>スレッドを選択するとメッセージ一覧が表示されます。</div>";
-                        }
+                        if (adminPostListArea) adminPostListArea.innerHTML = "<div style='color:#666; font-style:italic;'>スレッドを選択するとメッセージ一覧が表示されます。</div>";
                     }
                 }
             } else {
-                if (confirm("本当にこのメッセージを削除しますか？\n（データベースから完全に消去され、一般画面にもリアルタイムに反映されます）")) {
-                    if (postKey) {
-                        await supabase.from('posts').delete().eq('id', postKey);
-                    }
-                    if (logKey) {
-                        await supabase.from('global_logs').delete().eq('id', logKey);
-                    }
+                if (confirm("本当にこのメッセージを削除しますか？")) {
+                    if (postKey) await supabase.from('posts').delete().eq('id', postKey);
+                    if (logKey) await supabase.from('global_logs').delete().eq('id', logKey);
                     alert("該当のメッセージを削除しました。");
                 }
             }
         };
 
         window.adminDeleteImageHandler = async function(btn) {
-            const threadId = btn.getAttribute("data-thread");
             const postKey = btn.getAttribute("data-post");
-            if (!threadId || !postKey) return;
-            if (confirm("この投稿の画像だけを削除しますか？\n（テキスト本文は残ります）")) {
+            if (!postKey) return;
+            if (confirm("この投稿の画像だけを削除しますか？")) {
                 await supabase.from('posts').update({ image_data: null }).eq('id', postKey);
                 alert("画像を削除しました。");
                 btn.disabled = true;
@@ -1170,15 +978,10 @@
         window.adminWarnHandler = async function(btn) {
             const uid = btn.getAttribute("data-uid");
             if (!uid) return;
-
-            const warnMsg = prompt(`送信者(ID: ${uid})への警告メッセージ内容を入力してください：`, "不適切な発言（NGワードなど）が検出されました。掲示板のルールを守って書き込みを行ってください。");
+            const warnMsg = prompt(`送信者(ID: ${uid})への警告メッセージ内容を入力してください：`, "不適切な発言が検出されました。ルールを守って書き込みを行ってください。");
             if (warnMsg) {
-                await supabase.from('warnings').insert([{
-                    target_uid: uid,
-                    message: warnMsg,
-                    timestamp: Date.now()
-                }]);
-                alert("対象ユーザーへのリアルタイム警告シグナルを送信しました。");
+                await supabase.from('warnings').insert([{ target_uid: uid, message: warnMsg, timestamp: Date.now() }]);
+                alert("対象ユーザーへ警告シグナルを送信しました。");
             }
         };
 
@@ -1187,41 +990,26 @@
 
             const adminLogArea = document.getElementById("adminLogArea");
             const adminAlertArea = document.getElementById("adminAlertArea");
-
             adminLogArea.innerHTML = "<div style='color:#666;'>リアルタイムログの読み込みを開始しました...</div>";
             adminAlertArea.innerHTML = "<div style='color:#666; font-size:12px;'>アラート履歴はありません</div>";
 
             const processLog = (log, logKey) => {
-                if (adminLogArea.innerHTML.includes("リアルタイムログの読み込みを開始しました...")) {
-                    adminLogArea.innerHTML = "";
-                }
+                if (adminLogArea.innerHTML.includes("リアルタイムログの読み込みを開始しました...")) adminLogArea.innerHTML = "";
 
                 const uniqueId = `${log.thread_id}_${log.post_key}`;
                 const hasNgWord = log.has_ng_word;
                 const isThreadType = log.type === "新規スレッド"; 
                 let logTimestamp = log.timestamp || Date.now();
+                const isRecentLog = (Date.now() - logTimestamp) < 30000; 
 
-                const now = Date.now();
-                const isRecentLog = (now - logTimestamp) < 30000; 
-                
-                // 連投検出アラート
                 if (lastPostsByUid[log.uid]) {
-                    const prevPost = lastPostsByUid[log.uid];
-                    const timeDiff = logTimestamp - prevPost.timestamp;
-                    
+                    const timeDiff = logTimestamp - lastPostsByUid[log.uid].timestamp;
                     if (timeDiff >= 0 && timeDiff < 4000) { 
-                        if (adminAlertArea.innerHTML.includes("アラート履歴はありません")) {
-                            adminAlertArea.innerHTML = "";
-                        }
-                        
+                        if (adminAlertArea.innerHTML.includes("アラート履歴はありません")) adminAlertArea.innerHTML = "";
                         if (!document.getElementById(`admin-alert-${uniqueId}`)) {
                             const alertDiv = document.createElement("div");
                             alertDiv.id = `admin-alert-${uniqueId}`;
-                            alertDiv.style.backgroundColor = "#fff";
-                            alertDiv.style.border = "1px solid #ff0000";
-                            alertDiv.style.padding = "6px";
-                            alertDiv.style.marginBottom = "5px";
-                            alertDiv.style.fontSize = "12px";
+                            alertDiv.style.cssText = "background:#fff; border:1px solid #ff0000; padding:6px; margin-bottom:5px; font-size:12px;";
                             alertDiv.innerHTML = `
                                 <b style="color:red;">⚠️連投検出 (${Math.ceil(timeDiff/1000)}秒間隔)</b><br>
                                 <b>ID:</b> <span style="font-family:monospace;">${log.uid}</span> | <b>名前:</b> ${log.name}<br>
@@ -1233,37 +1021,22 @@
                                 </div>
                             `;
                             adminAlertArea.insertBefore(alertDiv, adminAlertArea.firstChild);
-
                             if (isRecentLog) playWarningSound();
                         }
                     }
                 }
 
-                // NGワード検出アラート
                 if (hasNgWord) {
-                    if (adminAlertArea.innerHTML.includes("アラート履歴はありません")) {
-                        adminAlertArea.innerHTML = "";
-                    }
+                    if (adminAlertArea.innerHTML.includes("アラート履歴はありません")) adminAlertArea.innerHTML = "";
                     if (!document.getElementById(`admin-alert-ng-${uniqueId}`)) {
                         if (window.autoNgMode && isRecentLog) {
-                            if (log.thread_id && log.post_key) {
-                                supabase.from('posts').delete().eq('id', log.post_key);
-                            }
+                            if (log.thread_id && log.post_key) supabase.from('posts').delete().eq('id', log.post_key);
                             if (logKey) supabase.from('global_logs').delete().eq('id', logKey);
-                            if (log.uid) {
-                                supabase.from('warnings').insert([{
-                                    target_uid: log.uid,
-                                    message: "NGワードを含む書き込みが自動検出・削除されました。掲示板のルールを守って書き込みを行ってください。",
-                                    timestamp: Date.now()
-                                }]);
-                            }
+                            if (log.uid) supabase.from('warnings').insert([{ target_uid: log.uid, message: "NGワードを含む書き込みが自動検出・削除されました。", timestamp: Date.now() }]);
+                            
                             const alertDiv = document.createElement("div");
                             alertDiv.id = `admin-alert-ng-${uniqueId}`;
-                            alertDiv.style.backgroundColor = "#f0fff0";
-                            alertDiv.style.border = "2px solid #00aa00";
-                            alertDiv.style.padding = "6px";
-                            alertDiv.style.marginBottom = "5px";
-                            alertDiv.style.fontSize = "12px";
+                            alertDiv.style.cssText = "background:#f0fff0; border:2px solid #00aa00; padding:6px; margin-bottom:5px; font-size:12px;";
                             alertDiv.innerHTML = `
                                 <b style="color:#008000;">✅ 自動処理完了</b><br>
                                 <b>ID:</b> <span style="font-family:monospace;">${log.uid}</span> | <b>名前:</b> ${log.name}<br>
@@ -1275,11 +1048,7 @@
                         } else {
                             const alertDiv = document.createElement("div");
                             alertDiv.id = `admin-alert-ng-${uniqueId}`;
-                            alertDiv.style.backgroundColor = "#fff5f5";
-                            alertDiv.style.border = "2px solid #ff0000";
-                            alertDiv.style.padding = "6px";
-                            alertDiv.style.marginBottom = "5px";
-                            alertDiv.style.fontSize = "12px";
+                            alertDiv.style.cssText = "background:#fff5f5; border:2px solid #ff0000; padding:6px; margin-bottom:5px; font-size:12px;";
                             alertDiv.innerHTML = `
                                 <b style="color:red;">🚨 NGワード検出</b><br>
                                 <b>ID:</b> <span style="font-family:monospace;">${log.uid}</span> | <b>名前:</b> ${log.name}<br>
@@ -1292,7 +1061,6 @@
                             `;
                             adminAlertArea.insertBefore(alertDiv, adminAlertArea.firstChild);
                         }
-
                         if (isRecentLog) playWarningSound();
                     }
                 }
@@ -1302,9 +1070,7 @@
                 if (!document.getElementById(`admin-log-${uniqueId}`)) {
                     const logDiv = document.createElement("div");
                     logDiv.id = `admin-log-${uniqueId}`;
-                    logDiv.style.padding = "6px";
-                    logDiv.style.borderBottom = "1px solid #ccc";
-                    logDiv.style.fontSize = "12px";
+                    logDiv.style.cssText = "padding:6px; border-bottom:1px solid #ccc; font-size:12px;";
                     logDiv.innerHTML = `
                         <div style="color:#000080; font-weight:bold;">[${log.time}] 【${log.board_name}】 📄 ${log.thread_title}</div>
                         <div style="margin: 2px 0;">
@@ -1315,8 +1081,8 @@
                         </div>
                         <div style="background:#fcfcfc; border:1px dashed #bbb; padding:5px; margin-top:3px; white-space:pre-wrap; word-break:break-all;">${log.text}</div>
                         <div style="margin-top:5px; text-align:right;">
-                            ${(!isThreadType && log.post_key) ? `<button class="admin-delete-img-btn" onclick="window.adminDeleteImageHandler(this)" data-thread="${log.thread_id}" data-post="${log.post_key}" style="font-size:11px; color:#c05000; cursor:pointer; margin-right:5px;">🖼️ このメッセージの画像を削除</button>` : ''}
-                            <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${log.board_id}" data-thread="${log.thread_id}" data-post="${log.post_key}" data-logkey="${logKey}" data-is-thread="${isThreadType}" style="font-size:11px; color:red; cursor:pointer;">${isThreadType ? '🗑️ スレッドごと削除' : '🗑️ このメッセージを削除'}</button>
+                            ${(!isThreadType && log.post_key) ? `<button class="admin-delete-img-btn" onclick="window.adminDeleteImageHandler(this)" data-thread="${log.thread_id}" data-post="${log.post_key}" style="font-size:11px; color:#c05000; cursor:pointer; margin-right:5px;">🖼️ 画像削除</button>` : ''}
+                            <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${log.board_id}" data-thread="${log.thread_id}" data-post="${log.post_key}" data-logkey="${logKey}" data-is-thread="${isThreadType}" style="font-size:11px; color:red; cursor:pointer;">${isThreadType ? '🗑️ スレッド削除' : '🗑️ メッセージ削除'}</button>
                             <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${log.uid}" style="font-size:11px; color:orange; cursor:pointer; margin-left:5px;">⚠️ 警告送信</button>
                         </div>
                     `;
@@ -1324,33 +1090,20 @@
                 }
             };
 
-            // 初期ログ取得
             supabase.from('global_logs').select('*').order('created_at', { ascending: false }).limit(100).then(({ data }) => {
-                if (data) {
-                    data.reverse().forEach(log => processLog(log, log.id));
-                }
+                if (data) data.reverse().forEach(log => processLog(log, log.id));
             });
 
-            // リアルタイムログ監視
             const adminLogChannel = supabase.channel('admin-global-logs')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_logs' }, payload => {
-                    processLog(payload.new, payload.new.id);
-                })
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_logs' }, payload => processLog(payload.new, payload.new.id))
                 .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'global_logs' }, payload => {
-                    const oldLog = payload.old;
-                    if (oldLog) {
-                        const elements = document.querySelectorAll(`[id*="${oldLog.id}"]`);
-                        elements.forEach(el => el.remove());
-                    }
+                    if (payload.old) document.querySelectorAll(`[id*="${payload.old.id}"]`).forEach(el => el.remove());
                 })
                 .subscribe();
 
             adminListeners.push(adminLogChannel);
         }
 
-        // ---------------------------------------------------------
-        // 🛠️ 板別スレッド・メッセージ巡回ブラウザの制御ロジック
-        // ---------------------------------------------------------
         let currentAdminThreadChannel = null;
         let currentAdminPostChannel = null;
 
@@ -1358,7 +1111,6 @@
             const adminBoardSelect = document.getElementById("adminBoardSelect");
             const adminThreadListArea = document.getElementById("adminThreadListArea");
             const adminPostListArea = document.getElementById("adminPostListArea");
-
             if (!adminBoardSelect) return;
 
             adminBoardSelect.innerHTML = "<option value=''>-- 板を選択してください --</option>";
@@ -1392,21 +1144,14 @@
                 adminThreadListArea.innerHTML = "<div style='color:#666;'>スレッドを読み込み中...</div>";
 
                 const fetchAdminThreads = async () => {
-                    const { data, error } = await supabase.from('threads').select('*').eq('board_id', boardId).order('created_at', { ascending: false });
+                    const { data } = await supabase.from('threads').select('*').eq('board_id', boardId).order('created_at', { ascending: false });
                     adminThreadListArea.innerHTML = "";
                     if (data && data.length > 0) {
                         let index = 1;
                         data.forEach(thread => {
                             const div = document.createElement("div");
-                            div.style.padding = "4px 5px";
-                            div.style.borderBottom = "1px dashed #ccc";
-                            div.style.cursor = "pointer";
-
-                            const a = document.createElement("a");
-                            a.textContent = `${index}: ${thread.title}`;
-                            a.style.fontWeight = "bold";
-                            
-                            div.appendChild(a);
+                            div.style.cssText = "padding:4px 5px; border-bottom:1px dashed #ccc; cursor:pointer;";
+                            div.innerHTML = `<a style="font-weight:bold;">${index}: ${thread.title}</a>`;
                             div.addEventListener("click", () => loadAdminPosts(boardId, thread.id, thread.title));
                             adminThreadListArea.appendChild(div);
                             index++;
@@ -1417,7 +1162,6 @@
                 };
 
                 await fetchAdminThreads();
-
                 currentAdminThreadChannel = supabase.channel(`admin-threads-${boardId}`)
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'threads', filter: `board_id=eq.${boardId}` }, fetchAdminThreads)
                     .subscribe();
@@ -1431,15 +1175,11 @@
             adminPostListArea.innerHTML = "<div style='color:#666;'>全メッセージを取得中...</div>";
 
             const fetchAdminPosts = async () => {
-                const { data, error } = await supabase.from('posts').select('*').eq('thread_id', threadId).order('created_at', { ascending: true });
+                const { data } = await supabase.from('posts').select('*').eq('thread_id', threadId).order('created_at', { ascending: true });
                 adminPostListArea.innerHTML = "";
                 
                 const titleDiv = document.createElement("div");
-                titleDiv.style.fontWeight = "bold";
-                titleDiv.style.color = "#ff0000";
-                titleDiv.style.marginBottom = "8px";
-                titleDiv.style.borderBottom = "2px solid #ff0000";
-                titleDiv.style.paddingBottom = "5px";
+                titleDiv.style.cssText = "font-weight:bold; color:#ff0000; margin-bottom:8px; border-bottom:2px solid #ff0000; padding-bottom:5px;";
                 titleDiv.innerHTML = `📌 スレ: ${threadTitle} <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${boardId}" data-thread="${threadId}" data-post="" data-logkey="" data-is-thread="true" style="font-size:11px; color:#fff; background-color:#ff0000; border:1px solid #cc0000; font-weight:bold; cursor:pointer; margin-left:15px; padding:2px 6px;">🗑️ このスレを丸ごと削除</button>`;
                 adminPostListArea.appendChild(titleDiv);
 
@@ -1447,11 +1187,7 @@
                     let count = 1;
                     data.forEach(post => {
                         const div = document.createElement("div");
-                        div.style.marginBottom = "8px";
-                        div.style.padding = "6px";
-                        div.style.background = "#fafaf0";
-                        div.style.border = "1px solid #ccc";
-
+                        div.style.cssText = "margin-bottom:8px; padding:6px; background:#fafaf0; border:1px solid #ccc;";
                         div.innerHTML = `
                             <div style="font-size:12px; color:#000;">
                                 <b>${count}</b> ：<b><span style="color:#008000;">${post.name}</span></b> ：${post.time} <span style="color:#666;font-family:monospace;">ID:${post.uid || '???'}</span>
@@ -1466,15 +1202,11 @@
                         count++;
                     });
                 } else {
-                    const noPost = document.createElement("div");
-                    noPost.style.color = "#666";
-                    noPost.textContent = "書き込みメッセージはありません。";
-                    adminPostListArea.appendChild(noPost);
+                    adminPostListArea.innerHTML += "<div style='color:#666;'>書き込みメッセージはありません。</div>";
                 }
             };
 
             await fetchAdminPosts();
-
             currentAdminPostChannel = supabase.channel(`admin-posts-${threadId}`)
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'posts', filter: `thread_id=eq.${threadId}` }, fetchAdminPosts)
                 .subscribe();
@@ -1496,220 +1228,66 @@
         <img id="lightbox-img" src="" alt="">
     </div>
 
-<style>
-    body.dark #weatherRegionSelect {
-        background: #242424 !important;
-        color: #ccc !important;
-        border-color: #555 !important;
-    }
-</style>
+    <script>
+        // ☀️ 天気・地震データ読み込み処理
+        document.getElementById('weatherRegionSelect').addEventListener('change', (e) => loadWeatherData(e.target.value));
 
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-    const sidebar = document.querySelector('.sidebar-box');
-    if (sidebar) {
-        const catTitle = document.createElement('div');
-        catTitle.className = 'cat-title';
-        catTitle.textContent = '⏳ 外部情報';
-        
-        const linksArea = document.createElement('div');
-        linksArea.className = 'board-links-area';
-        
-        const link = document.createElement('a');
-        link.className = 'board-link';
-        link.textContent = '天気・地震情報';
-        link.style.fontWeight = 'bold';
-        
-        link.addEventListener('click', () => {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        function loadWeatherData(code) {
+            const resultArea = document.getElementById('weatherResultArea');
+            if (!resultArea) return;
+            resultArea.textContent = "天気を読み込み中...";
             
+            fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`)
+                .then(res => res.json())
+                .then(data => {
+                    const reportDatetime = new Date(data[0].reportDatetime).toLocaleString('ja-JP');
+                    let html = `<div style="font-size:11px; color:#666; margin-bottom:8px;">発表時刻: ${reportDatetime}</div>`;
+                    data[0].timeSeries[0].areas.forEach(area => {
+                        html += `<div style="font-weight:bold; color:#008000; margin-top:8px;">【${area.area.name}】</div>`;
+                        const times = data[0].timeSeries[0].timeDefines;
+                        area.weathers.forEach((weather, index) => {
+                            const dateStr = new Date(times[index]).toLocaleDateString('ja-JP', {month:'short', day:'numeric'});
+                            html += `<div style="margin-left:10px; margin-bottom:4px;"><b>${dateStr}:</b> ${weather}</div>`;
+                        });
+                    });
+                    resultArea.innerHTML = html;
+                })
+                .catch(() => { resultArea.textContent = "天気情報の取得に失敗しました。"; });
+        }
+
+        function loadEarthquakeData() {
+            const resultArea = document.getElementById('earthquakeResultArea');
+            if (!resultArea) return;
+            resultArea.textContent = "地震情報を取得中...";
+            
+            fetch('https://api.p2pquake.net/v2/history?codes=551&limit=5')
+                .then(res => res.json())
+                .then(data => {
+                    let html = data.length === 0 ? "最近の地震情報はありません。" : "";
+                    data.forEach(item => {
+                        html += `<div style="border-bottom: 1px dashed #ccc; padding: 6px 0;">
+                            <b>発生時刻:</b> ${item.earthquake.time}<br>
+                            <b>震源地:</b> ${item.earthquake.hypocenter.name || "不明"}<br>
+                            <b>最大震度:</b> <span style="color:#ff0000; font-weight:bold;">${parseMaxScale(item.earthquake.maxScale)}</span>
+                        </div>`;
+                    });
+                    resultArea.innerHTML = html;
+                })
+                .catch(() => { resultArea.textContent = "地震情報の取得に失敗しました。"; });
+        }
+
+        function parseMaxScale(scale) {
+            const map = { 10:"1", 20:"2", 30:"3", 40:"4", 45:"5弱", 50:"5強", 55:"6弱", 60:"6強", 70:"7" };
+            return map[scale] || "不明または調査中";
+        }
+
+        setInterval(() => {
             const myView = document.getElementById('weatherEarthquakeView');
-            if (myView) myView.classList.add('active');
-            
-            const locDisp = document.getElementById('currentLocationDisplay') || document.querySelector('.nav-text span');
-            if (locDisp) locDisp.textContent = '天気・地震情報';
-            
-            const currentRegion = document.getElementById('weatherRegionSelect').value;
-            loadWeatherData(currentRegion);
-            loadEarthquakeData();
-        });
-        
-        linksArea.appendChild(link);
-        sidebar.appendChild(catTitle);
-        sidebar.appendChild(linksArea);
-    }
-
-    const mainBox = document.querySelector('.main-content-box');
-    if (mainBox) {
-        const viewDiv = document.createElement('div');
-        viewDiv.id = 'weatherEarthquakeView';
-        viewDiv.className = 'view-section';
-        viewDiv.innerHTML = `
-            <div class="board-title">🌍 日本地域の天気・地震情報</div>
-            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
-                
-                <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 12px; border: 1px solid #ccc;">
-                    <h3 style="color: #af0000; border-bottom: 1px dashed #999; margin: 0 0 10px 0; font-size: 14px;">☀️ 地域別 天気予報</h3>
-                    <select id="weatherRegionSelect" style="padding: 4px; font-size: 13px; margin-bottom: 10px; width: 100%; border: 1px solid #aaa; background: #fff; color: #000;">
-                        <option value="130000">東京都</option>
-                        <option value="016000">北海道（石狩・空知・後志）</option>
-                        <option value="020000">青森県</option>
-                        <option value="030000">岩手県</option>
-                        <option value="040000">宮城県</option>
-                        <option value="050000">秋田県</option>
-                        <option value="060000">山形県</option>
-                        <option value="070000">福島県</option>
-                        <option value="080000">茨城県</option>
-                        <option value="090000">栃木県</option>
-                        <option value="100000">群馬県</option>
-                        <option value="110000">埼玉県</option>
-                        <option value="120000">千葉県</option>
-                        <option value="140000">神奈川県</option>
-                        <option value="150000">新潟県</option>
-                        <option value="160000">富山県</option>
-                        <option value="170000">石川県</option>
-                        <option value="180000">福井県</option>
-                        <option value="190000">山梨県</option>
-                        <option value="200000">長野県</option>
-                        <option value="210000">岐阜県</option>
-                        <option value="220000">静岡県</option>
-                        <option value="230000">愛知県</option>
-                        <option value="240000">三重県</option>
-                        <option value="250000">滋賀県</option>
-                        <option value="260000">京都府</option>
-                        <option value="270000">大阪府</option>
-                        <option value="280000">兵庫県</option>
-                        <option value="290000">奈良県</option>
-                        <option value="300000">和歌山県</option>
-                        <option value="310000">鳥取県</option>
-                        <option value="320000">島根県</option>
-                        <option value="330000">岡山県</option>
-                        <option value="340000">広島県</option>
-                        <option value="350000">山口県</option>
-                        <option value="360000">徳島県</option>
-                        <option value="370000">香川県</option>
-                        <option value="380000">愛媛県</option>
-                        <option value="390000">高知県</option>
-                        <option value="400000">福岡県</option>
-                        <option value="410000">佐賀県</option>
-                        <option value="420000">長崎県</option>
-                        <option value="430000">熊本県</option>
-                        <option value="440000">大分県</option>
-                        <option value="450000">宮崎県</option>
-                        <option value="460100">鹿児島県</option>
-                        <option value="471000">沖縄県</option>
-                    </select>
-                    <div id="weatherResultArea" style="font-size: 13px; line-height: 1.6; min-height: 100px;">選択した地域の天気を読み込み中...</div>
-                </div>
-                
-                <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 12px; border: 1px solid #ccc;">
-                    <h3 style="color: #af0000; border-bottom: 1px dashed #999; margin: 0 0 10px 0; font-size: 14px;">🌋 最近の地震情報 (最新5件)</h3>
-                    <div id="earthquakeResultArea" style="font-size: 13px; line-height: 1.6; min-height: 100px;">地震情報を取得中...</div>
-                </div>
-                
-            </div>
-        </div>
-        `;
-        mainBox.appendChild(viewDiv);
-        
-        document.getElementById('weatherRegionSelect').addEventListener('change', (e) => {
-            loadWeatherData(e.target.value);
-        });
-    }
-});
-
-function loadWeatherData(code) {
-    const resultArea = document.getElementById('weatherResultArea');
-    if (!resultArea) return;
-    
-    resultArea.textContent = "天気を読み込み中...";
-    
-    fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`)
-        .then(res => res.json())
-        .then(data => {
-            const reportDatetime = new Date(data[0].reportDatetime).toLocaleString('ja-JP');
-            let html = `<div style="font-size:11px; color:#666; margin-bottom:8px;">発表時刻: ${reportDatetime}</div>`;
-            
-            data[0].timeSeries[0].areas.forEach(area => {
-                html += `<div style="font-weight:bold; color:#008000; margin-top:8px;">【${area.area.name}】</div>`;
-                const times = data[0].timeSeries[0].timeDefines;
-                area.weathers.forEach((weather, index) => {
-                    const dateStr = new Date(times[index]).toLocaleDateString('ja-JP', {month:'short', day:'numeric'});
-                    html += `<div style="margin-left:10px; margin-bottom:4px;"><b>${dateStr}:</b> ${weather}</div>`;
-                });
-            });
-            resultArea.innerHTML = html;
-        })
-        .catch(err => {
-            resultArea.textContent = "天気情報の取得に失敗しました。";
-            console.error(err);
-        });
-}
-
-function loadEarthquakeData() {
-    const resultArea = document.getElementById('earthquakeResultArea');
-    if (!resultArea) return;
-    
-    resultArea.textContent = "地震情報を取得中...";
-    
-    fetch('https://api.p2pquake.net/v2/history?codes=551&limit=5')
-        .then(res => res.json())
-        .then(data => {
-            let html = '';
-            if (data.length === 0) {
-                html = "最近の地震情報はありません。";
-            } else {
-                data.forEach(item => {
-                    const time = item.earthquake.time;
-                    const place = item.earthquake.hypocenter.name || "不明";
-                    const scale = parseMaxScale(item.earthquake.maxScale);
-                    html += `<div style="border-bottom: 1px dashed #ccc; padding: 6px 0;">
-                        <b>発生時刻:</b> ${time}<br>
-                        <b>震源地:</b> ${place}<br>
-                        <b>最大震度:</b> <span style="color:#ff0000; font-weight:bold;">${scale}</span>
-                    </div>`;
-                });
-            }
-            resultArea.innerHTML = html;
-        })
-        .catch(err => {
-            resultArea.textContent = "地震情報の取得に失敗しました。";
-            console.error(err);
-        });
-}
-
-function parseMaxScale(scale) {
-    switch(scale) {
-        case 10: return "1";
-        case 20: return "2";
-        case 30: return "3";
-        case 40: return "4";
-        case 45: return "5弱";
-        case 50: return "5強";
-        case 55: return "6弱";
-        case 60: return "6強";
-        case 70: return "7";
-        default: return "不明または調査中";
-    }
-}
-</script>
-
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-    setInterval(() => {
-        const myView = document.getElementById('weatherEarthquakeView');
-        if (myView && myView.classList.contains('active')) {
-            const selectEl = document.getElementById('weatherRegionSelect');
-            if (selectEl && typeof loadWeatherData === 'function') {
-                loadWeatherData(selectEl.value);
-            }
-            if (typeof loadEarthquakeData === 'function') {
+            if (myView && myView.classList.contains('active')) {
+                loadWeatherData(document.getElementById('weatherRegionSelect').value);
                 loadEarthquakeData();
             }
-            console.log("【自動更新】天気と地震情報を最新にアップデートしました。");
-        }
-    }, 300000);
-});
-</script>
+        }, 300000);
+    </script>
 </body>
 </html>
