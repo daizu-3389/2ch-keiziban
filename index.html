@@ -219,7 +219,7 @@
             .admin-delete-btn, .admin-warn-btn { padding: 4px 8px !important; font-size: 11px !important; margin: 2px 1px !important; display: inline-block; }
         }
 
-        /* 🌙 ダークモード（平成掲示板の黒背景・グリーン/オレンジテキスト風） */
+        /* 🌙 ダークモード */
         body.dark { background-color: #000000 !important; color: #00ff00 !important; }
         body.dark a { color: #00ffff; }
         body.dark a:hover { color: #ffff00; background-color: #000; }
@@ -829,7 +829,7 @@
             welcomeView.classList.add("active");
         });
 
-        // 💬 ご意見・お問い合わせモーダル処理（ラジオボタン対応）
+        // 💬 ご意見・お問い合わせモーダル処理
         const reportBroadcastChannel = supabase.channel('global-reports-broadcast');
         reportBroadcastChannel.subscribe();
 
@@ -868,14 +868,12 @@
                 timestamp: timestamp
             };
 
-            // ⚡ 1. 超高速ブロードキャスト送信（管理者画面へ即時反映）
             reportBroadcastChannel.send({
                 type: 'broadcast',
                 event: 'new-report',
                 payload: reportPayload
             });
 
-            // 💾 2. データベース永続化
             const { error } = await supabase.from('reports').insert([{
                 text: reportPayload.text,
                 uid: userId,
@@ -922,7 +920,6 @@
 
             const encoded = encodeURIComponent(word);
             
-            // 外部辞書リンク設定
             document.getElementById("linkGoo").href = `https://dictionary.goo.ne.jp/srch/all/${encoded}/m0u/`;
             document.getElementById("linkWeblio").href = `https://www.weblio.jp/content/${encoded}`;
             document.getElementById("linkKotobank").href = `https://kotobank.jp/word/${encoded}`;
@@ -931,7 +928,6 @@
             dictQuickLinks.style.display = "block";
             dictResultArea.innerHTML = "<div style='color:#666;'>辞書・百科事典データを照会中...</div>";
 
-            // Wikipedia APIを利用して即時簡易定義を表示
             fetch(`https://ja.wikipedia.org/api/rest_v1/page/summary/${encoded}`)
                 .then(res => {
                     if (!res.ok) throw new Error("Not found");
@@ -1002,6 +998,7 @@
             }
         }
 
+        // 🔧 【修正箇所】スレッド取得時の堅牢化・エラーログ表示処理
         async function loadThreadList(boardId) {
             if (currentThreadChannel) supabase.removeChannel(currentThreadChannel);
             threadList.innerHTML = "<div style='color:#666; font-size:12px;'>読み込み中...</div>";
@@ -1009,11 +1006,23 @@
             if (searchInput) searchInput.value = "";
 
             const fetchThreads = async () => {
-                const { data, error } = await supabase.from('threads').select('*').eq('board_id', boardId).order('created_at', { ascending: false });
+                // 1st: created_atでの降順ソートを試行
+                let { data, error } = await supabase.from('threads').select('*').eq('board_id', boardId).order('created_at', { ascending: false });
+                
+                // created_at カラムがない場合などのフォールバック (idソート)
                 if (error) {
-                    threadList.innerHTML = "<div style='color:red; font-size:12px;'>スレッドの取得に失敗しました</div>";
+                    console.warn("created_at での取得に失敗。id ソートで再試行します:", error.message);
+                    const fallback = await supabase.from('threads').select('*').eq('board_id', boardId).order('id', { ascending: false });
+                    data = fallback.data;
+                    error = fallback.error;
+                }
+
+                if (error) {
+                    console.error("スレッド取得エラー詳細:", error);
+                    threadList.innerHTML = `<div style='color:red; font-size:12px;'>スレッドの取得に失敗しました<br><span style='font-size:10px; color:#666;'>(${error.message || 'Supabaseのテーブル権限(RLS)または設定を確認してください'})</span></div>`;
                     return;
                 }
+
                 allThreadData = {};
                 (data || []).forEach(t => { allThreadData[t.id] = { title: t.title, replyCount: t.reply_count }; });
                 renderThreadList(allThreadData, searchInput ? searchInput.value : "");
@@ -1111,8 +1120,12 @@
             postList.innerHTML = "<div style='color:#666; font-size:12px;'>読み込み中...</div>";
 
             const fetchPosts = async () => {
-                const { data, error } = await supabase.from('posts').select('*').eq('thread_id', threadId).order('created_at', { ascending: true });
-                if (error) return;
+                let { data, error } = await supabase.from('posts').select('*').eq('thread_id', threadId).order('created_at', { ascending: true });
+                if (error) {
+                    // created_atで失敗した場合のフォールバック
+                    const fallback = await supabase.from('posts').select('*').eq('thread_id', threadId).order('id', { ascending: true });
+                    data = fallback.data;
+                }
 
                 postList.innerHTML = "";
                 if (data) {
@@ -1566,7 +1579,12 @@
                 adminThreadListArea.innerHTML = "<div style='color:#666;'>スレッドを読み込み中...</div>";
 
                 const fetchAdminThreads = async () => {
-                    const { data } = await supabase.from('threads').select('*').eq('board_id', boardId).order('created_at', { ascending: false });
+                    let { data } = await supabase.from('threads').select('*').eq('board_id', boardId).order('created_at', { ascending: false });
+                    if (!data) {
+                        const fallback = await supabase.from('threads').select('*').eq('board_id', boardId).order('id', { ascending: false });
+                        data = fallback.data;
+                    }
+
                     adminThreadListArea.innerHTML = "";
                     if (data && data.length > 0) {
                         let index = 1;
@@ -1597,7 +1615,12 @@
             adminPostListArea.innerHTML = "<div style='color:#666;'>全メッセージを取得中...</div>";
 
             const fetchAdminPosts = async () => {
-                const { data } = await supabase.from('posts').select('*').eq('thread_id', threadId).order('created_at', { ascending: true });
+                let { data } = await supabase.from('posts').select('*').eq('thread_id', threadId).order('created_at', { ascending: true });
+                if (!data) {
+                    const fallback = await supabase.from('posts').select('*').eq('thread_id', threadId).order('id', { ascending: true });
+                    data = fallback.data;
+                }
+
                 adminPostListArea.innerHTML = "";
                 
                 const titleDiv = document.createElement("div");
