@@ -69,7 +69,7 @@
         .res-count { font-size: 11px; color: #666; margin-left: 8px; }
         input:disabled { background-color: #e0e0e0 !important; color: #666 !important; cursor: not-allowed; }
 
-        /* 📄 利用規約モーダル (超極小・高密度・長文対応) */
+        /* 📄 利用規約モーダル */
         #termsModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; justify-content: center; align-items: center; }
         .terms-card { background: #fafaf0; border: 2px solid #ff0000; padding: 20px; max-width: 680px; width: 94%; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
         .terms-card h2 { color: #ff0000; font-size: 18px; margin: 0 0 10px 0; border-bottom: 2px solid #ff0000; padding-bottom: 5px; text-align: center; flex-shrink: 0; }
@@ -80,6 +80,12 @@
         .terms-body p { margin: 0 0 6px 0; }
         .terms-body ul { margin: 0 0 8px 0; padding-left: 18px; }
         .terms-body li { margin-bottom: 4px; }
+
+        /* 💬 ご意見・お問い合わせモーダル */
+        #reportModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: none; justify-content: center; align-items: center; }
+        .report-card { background: #fafaf0; border: 2px solid #000080; padding: 20px; max-width: 500px; width: 92%; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .report-radio-group { display: flex; gap: 12px; margin: 8px 0; flex-wrap: wrap; font-size: 13px; }
+        .report-radio-group label { cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 3px; }
 
         @media (max-width: 768px) {
             body { margin: 8px; font-size: 13px; }
@@ -112,7 +118,7 @@
         body.dark .post-id { color: #888; }
         body.dark .post-dd { color: #ccc; }
         body.dark .post-group:target { background-color: #3a3200; }
-        body.dark .form-row input[type="text"], body.dark .form-row textarea, body.dark .thread-search-box, body.dark #weatherRegionSelect { background: #2e2e2e !important; color: #d0d0d0 !important; border-color: #555 !important; }
+        body.dark .form-row input[type="text"], body.dark .form-row textarea, body.dark .thread-search-box, body.dark #weatherRegionSelect, body.dark #dictKeywordInput { background: #2e2e2e !important; color: #d0d0d0 !important; border-color: #555 !important; }
         body.dark .btn-submit { background: #333; border-color: #666; color: #ccc; }
         body.dark .btn-submit:hover { background: #444; }
         body.dark .res-anchor { color: #7799ff; }
@@ -129,13 +135,15 @@
         body.dark .terms-subtext { color: #aaa; }
         body.dark .terms-body { background: #1e1e1e; border-color: #444; color: #bbb; }
         body.dark .terms-body h3 { color: #ff6666; border-color: #ff6666; }
+        body.dark .report-card { background: #242424; border-color: #7799ff; color: #d0d0d0; }
+        body.dark #dictResultArea { background: #1e1e1e !important; border-color: #444 !important; color: #ccc !important; }
         .dark-mode-btn { background: #eee; color: #555; border: 1px solid #aaa; border-radius: 3px; font-size: 11px; padding: 1px 7px; cursor: pointer; margin-left: 8px; vertical-align: middle; }
         body.dark .dark-mode-btn { background: #333; color: #ffd700; border-color: #666; }
     </style>
 </head>
 <body>
 
-    <!-- 📜 利用規約モーダル (超長文・毎アクセス強制同意版) -->
+    <!-- 📜 利用規約モーダル -->
     <div id="termsModal">
         <div class="terms-card">
             <h2>📜 名無し世界の掲示板 利用規約 (Ver. 2.0.0 総合運用規程)</h2>
@@ -203,9 +211,34 @@
         </div>
     </div>
 
+    <!-- 💬 ご意見・お問い合わせモーダル -->
+    <div id="reportModal">
+        <div class="report-card">
+            <h3 style="margin: 0 0 10px 0; color: #000080; font-size: 15px; border-bottom: 2px solid #000080; padding-bottom: 5px;">💬 ご意見・お問い合わせフォーム</h3>
+            <div style="font-size: 12px; margin-bottom: 12px; color: #555;">お問い合わせの種類を選択し、詳しい内容を入力してください。</div>
+            <div class="form-row">
+                <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">【問い合わせの種類】</label>
+                <div class="report-radio-group">
+                    <label><input type="radio" name="reportCat" value="要望" checked> 💡 要望</label>
+                    <label><input type="radio" name="reportCat" value="不具合"> 🐛 不具合</label>
+                    <label><input type="radio" name="reportCat" value="荒らし通報"> 🚨 荒らし通報</label>
+                    <label><input type="radio" name="reportCat" value="その他"> ❓ その他</label>
+                </div>
+            </div>
+            <div class="form-row" style="margin-top: 10px;">
+                <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">【内容】</label>
+                <textarea id="reportTextContent" rows="4" style="width: 100%; border: 1px solid #aaa; padding: 6px; font-size: 13px;" placeholder="詳しい内容を入力してください..."></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                <button class="btn-submit" id="cancelReportBtn" style="background: #ccc; border: 1px solid #888;">キャンセル</button>
+                <button class="btn-submit" id="submitReportBtn" style="background: #ff0000; color: #fff; border: none; padding: 4px 18px;">送信する</button>
+            </div>
+        </div>
+    </div>
+
     <div class="nav-text">
         <a id="navHomeBtn">■板一覧（ホーム）</a> ＞ <span id="currentLocationDisplay">トップページ</span> <span style="font-size:10px; color:#888; margin-left:5px;">Ver. 2.0.0</span>
-        <span style="float: right;">👥 現在: <b id="onlineCount">0</b> 人 | <a id="navReportBtn">🚨 問題報告</a> | <a id="navAdminBtn">⚙️ 管理者部屋</a><button class="dark-mode-btn" id="darkModeToggle">🌙 ダーク</button></span>
+        <span style="float: right;">👥 現在: <b id="onlineCount">0</b> 人 | <a id="navReportBtn">💬 ご意見・お問い合わせ</a> | <a id="navAdminBtn">⚙️ 管理者部屋</a><button class="dark-mode-btn" id="darkModeToggle">🌙 ダーク</button></span>
         <div style="clear: both;"></div>
     </div>
 
@@ -221,6 +254,7 @@
                 <div class="cat-title">⏳ 外部情報</div>
                 <div class="board-links-area">
                     <a class="board-link" id="navWeatherBtn" style="font-weight:bold;">天気・地震情報</a>
+                    <a class="board-link" id="navDictBtn" style="font-weight:bold;">📖 辞書検索</a>
                 </div>
             </div>
 
@@ -304,6 +338,28 @@
                     </div>
                 </div>
 
+                <!-- 📖 外部辞書検索ビュー -->
+                <div id="dictionaryView" class="view-section">
+                    <div class="board-title">📖 外部辞書・百科事典 検索</div>
+                    <div class="form-container" style="max-width: 100%;">
+                        <h3>🔍 単語・用語の検索</h3>
+                        <div class="form-row" style="display: flex; gap: 8px;">
+                            <input type="text" id="dictKeywordInput" style="flex: 1; font-size: 14px; padding: 5px;" placeholder="調べたい言葉を入力...">
+                            <button class="btn-submit" id="dictSearchBtn" style="padding: 5px 20px;">検索</button>
+                        </div>
+                        <div id="dictQuickLinks" style="margin: 12px 0; font-size: 12px; display: none;">
+                            <b>🔗 各種外部辞書で直接調べる:</b><br style="margin-bottom: 4px;">
+                            <a id="linkGoo" target="_blank" class="res-anchor" style="margin-right: 12px;">[Goo辞書]</a>
+                            <a id="linkWeblio" target="_blank" class="res-anchor" style="margin-right: 12px;">[Weblio国語辞典]</a>
+                            <a id="linkKotobank" target="_blank" class="res-anchor" style="margin-right: 12px;">[コトバンク]</a>
+                            <a id="linkWiki" target="_blank" class="res-anchor">[Wikipedia]</a>
+                        </div>
+                        <div id="dictResultArea" style="background: #fff; border: 1px solid #ccc; padding: 12px; min-height: 120px; font-size: 13px; line-height: 1.6; margin-top: 10px;">
+                            <span style="color: #666;">単語を入力して「検索」ボタンを押すと概要が表示され、各種外部辞書への直通リンクが生成されます。</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="adminView" class="view-section">
                     <div class="board-title" style="color: #000080; border-bottom: 2px solid #000080;">🛠️ 管理者専用 リアルタイム監視ロビー</div>
                     <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
@@ -332,7 +388,7 @@
                     </div>
 
                     <div style="margin-top: 15px; border-top: 2px solid #000080; padding-top: 10px;">
-                        <h3 style="font-size: 13px; color: #cc0000; margin: 0 0 5px 0; font-weight: bold;">📩 運営宛て問題報告一覧 (リアルタイム)</h3>
+                        <h3 style="font-size: 13px; color: #cc0000; margin: 0 0 5px 0; font-weight: bold;">📩 運営宛てご意見・お問い合わせ一覧 (リアルタイム)</h3>
                         <div id="adminReportArea" style="background: #fff; border: 1px solid #ccc; padding: 10px; height: 18vh; overflow-y: auto; font-size: 12px;"></div>
                     </div>
 
@@ -363,7 +419,7 @@
     <script type="module">
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-        // 📜 利用規約同意チェック (毎アクセス・更新毎に必ず提示する仕様)
+        // 📜 利用規約同意チェック
         const termsModal = document.getElementById("termsModal");
         document.getElementById("agreeTermsBtn").addEventListener("click", () => {
             termsModal.style.display = "none";
@@ -371,7 +427,7 @@
 
         // ⚡ Supabase設定
         const SUPABASE_URL = "https://yeotqaorheaxjppylfgg.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inllb3RxYW9yaGVheGpwcHlsZmdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MzA1NzMsImV4cCI6MjEwMTUwNjU3M30.GqbadI7MCM3h6xT9Ro-OJVzjgjmVip9vn5G6iA9KxoM";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInRefiI6Inllb3RxYW9yaGVheGpwcHlsZmdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MzA1NzMsImV4cCI6MjEwMTUwNjU3M30.GqbadI7MCM3h6xT9Ro-OJVzjgjmVip9vn5G6iA9KxoM";
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const COOLDOWN_MS = 10000;
@@ -466,12 +522,14 @@
         const threadListView = document.getElementById("threadListView");
         const threadDetailView = document.getElementById("threadDetailView");
         const weatherEarthquakeView = document.getElementById("weatherEarthquakeView");
+        const dictionaryView = document.getElementById("dictionaryView");
         const adminView = document.getElementById("adminView");
 
         const navHomeBtn = document.getElementById("navHomeBtn");
         const navReportBtn = document.getElementById("navReportBtn");
         const navAdminBtn = document.getElementById("navAdminBtn");
         const navWeatherBtn = document.getElementById("navWeatherBtn");
+        const navDictBtn = document.getElementById("navDictBtn");
         const currentLocationDisplay = document.getElementById("currentLocationDisplay");
         const currentBoardTitleDisplay = document.getElementById("currentBoardTitleDisplay");
         const threadList = document.getElementById("threadList");
@@ -658,60 +716,135 @@
             welcomeView.classList.add("active");
         });
 
-        // 🚨 運営宛て問題報告送信処理（WebSocket即時ブロードキャスト＋DB保存）
+        // 💬 ご意見・お問い合わせモーダル処理（ラジオボタン対応）
         const reportBroadcastChannel = supabase.channel('global-reports-broadcast');
         reportBroadcastChannel.subscribe();
 
+        const reportModal = document.getElementById("reportModal");
+        const cancelReportBtn = document.getElementById("cancelReportBtn");
+        const submitReportBtn = document.getElementById("submitReportBtn");
+        const reportTextContent = document.getElementById("reportTextContent");
+
         if (navReportBtn) {
-            navReportBtn.addEventListener("click", async () => {
-                const reportContent = prompt("運営へ報告する問題点やご意見を入力してください：");
-                if (!reportContent || !reportContent.trim()) return;
-                
-                const userId = getTodayID();
-                const timeStr = getNowString();
-                const timestamp = Date.now();
-                const reportPayload = {
-                    id: "rep_" + timestamp,
-                    text: reportContent.trim(),
-                    uid: userId,
-                    time: timeStr,
-                    timestamp: timestamp
-                };
-
-                // ⚡ 1. 超高速ブロードキャスト送信（管理者画面へ0秒即時反映）
-                reportBroadcastChannel.send({
-                    type: 'broadcast',
-                    event: 'new-report',
-                    payload: reportPayload
-                });
-
-                // 💾 2. データベース永続化（reportsテーブル優先、失敗時global_logs）
-                const { error } = await supabase.from('reports').insert([{
-                    text: reportPayload.text,
-                    uid: userId,
-                    time: timeStr,
-                    timestamp: timestamp
-                }]);
-
-                if (error) {
-                    await supabase.from('global_logs').insert([{
-                        board_id: "system",
-                        board_name: "運営報告",
-                        thread_id: "report",
-                        post_key: reportPayload.id,
-                        thread_title: "問題点報告",
-                        name: "報告ユーザー",
-                        text: reportPayload.text,
-                        time: timeStr,
-                        uid: userId,
-                        type: "問題報告",
-                        timestamp: timestamp,
-                        has_ng_word: false
-                    }]);
-                }
-                alert("運営へ問題点を報告しました。送信ありがとうございます！");
+            navReportBtn.addEventListener("click", () => {
+                reportTextContent.value = "";
+                reportModal.style.display = "flex";
             });
         }
+
+        cancelReportBtn.addEventListener("click", () => {
+            reportModal.style.display = "none";
+        });
+
+        submitReportBtn.addEventListener("click", async () => {
+            const reportContent = reportTextContent.value.trim();
+            if (!reportContent) return alert("お問い合わせ内容を入力してください。");
+
+            const selectedCatEl = document.querySelector('input[name="reportCat"]:checked');
+            const category = selectedCatEl ? selectedCatEl.value : "その他";
+            const fullText = `[${category}] ${reportContent}`;
+
+            const userId = getTodayID();
+            const timeStr = getNowString();
+            const timestamp = Date.now();
+            const reportPayload = {
+                id: "rep_" + timestamp,
+                text: fullText,
+                uid: userId,
+                time: timeStr,
+                timestamp: timestamp
+            };
+
+            // ⚡ 1. 超高速ブロードキャスト送信（管理者画面へ即時反映）
+            reportBroadcastChannel.send({
+                type: 'broadcast',
+                event: 'new-report',
+                payload: reportPayload
+            });
+
+            // 💾 2. データベース永続化
+            const { error } = await supabase.from('reports').insert([{
+                text: reportPayload.text,
+                uid: userId,
+                time: timeStr,
+                timestamp: timestamp
+            }]);
+
+            if (error) {
+                await supabase.from('global_logs').insert([{
+                    board_id: "system",
+                    board_name: "運営報告",
+                    thread_id: "report",
+                    post_key: reportPayload.id,
+                    thread_title: "問題点報告",
+                    name: "報告ユーザー",
+                    text: reportPayload.text,
+                    time: timeStr,
+                    uid: userId,
+                    type: "問題報告",
+                    timestamp: timestamp,
+                    has_ng_word: false
+                }]);
+            }
+
+            reportModal.style.display = "none";
+            alert(`【${category}】の内容を運営へ送信しました。ご協力ありがとうございます！`);
+        });
+
+        // 📖 辞書検索ビュー表示・検索処理
+        const dictKeywordInput = document.getElementById("dictKeywordInput");
+        const dictSearchBtn = document.getElementById("dictSearchBtn");
+        const dictResultArea = document.getElementById("dictResultArea");
+        const dictQuickLinks = document.getElementById("dictQuickLinks");
+
+        navDictBtn.addEventListener("click", () => {
+            hideAllViews();
+            dictionaryView.classList.add("active");
+            currentLocationDisplay.textContent = "辞書検索";
+        });
+
+        function performDictSearch() {
+            const word = dictKeywordInput.value.trim();
+            if (!word) return alert("検索したい単語を入力してください。");
+
+            const encoded = encodeURIComponent(word);
+            
+            // 外部辞書リンク設定
+            document.getElementById("linkGoo").href = `https://dictionary.goo.ne.jp/srch/all/${encoded}/m0u/`;
+            document.getElementById("linkWeblio").href = `https://www.weblio.jp/content/${encoded}`;
+            document.getElementById("linkKotobank").href = `https://kotobank.jp/word/${encoded}`;
+            document.getElementById("linkWiki").href = `https://ja.wikipedia.org/wiki/${encoded}`;
+            
+            dictQuickLinks.style.display = "block";
+            dictResultArea.innerHTML = "<div style='color:#666;'>辞書・百科事典データを照会中...</div>";
+
+            // Wikipedia APIを利用して即時簡易定義を表示
+            fetch(`https://ja.wikipedia.org/api/rest_v1/page/summary/${encoded}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Not found");
+                    return res.json();
+                })
+                .then(data => {
+                    let html = `<div style="font-weight:bold; font-size:15px; color:#af0000; margin-bottom:6px;">📖 ${data.title}</div>`;
+                    if (data.extract) {
+                        html += `<p style="margin:0 0 10px 0;">${data.extract}</p>`;
+                    } else {
+                        html += `<p style="margin:0 0 10px 0; color:#666;">詳細概要は見つかりませんでした。上の直通リンクをご利用ください。</p>`;
+                    }
+                    if (data.thumbnail && data.thumbnail.source) {
+                        html += `<img src="${data.thumbnail.source}" style="max-height:120px; border:1px solid #ccc; margin-bottom:8px; border-radius:3px;"><br>`;
+                    }
+                    dictResultArea.innerHTML = html;
+                })
+                .catch(() => {
+                    dictResultArea.innerHTML = `<div style="color:#666;">「<b>${word}</b>」の簡易概要データが見つかりませんでした。<br>上の「各外部辞書リンク（Goo辞書・Weblio・コトバンク等）」をクリックして外部サイトで結果をご確認ください。</div>`;
+                });
+        }
+
+        dictSearchBtn.addEventListener("click", performDictSearch);
+        dictKeywordInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") performDictSearch();
+        });
 
         navWeatherBtn.addEventListener("click", () => {
             hideAllViews();
@@ -1115,29 +1248,27 @@
 
             adminLogArea.innerHTML = "<div style='color:#666;'>リアルタイムログの読み込みを開始しました...</div>";
             adminAlertArea.innerHTML = "<div style='color:#666; font-size:12px;'>アラート履歴はありません</div>";
-            if (adminReportArea) adminReportArea.innerHTML = "<div style='color:#666; font-size:12px;'>報告を読み込み中...</div>";
+            if (adminReportArea) adminReportArea.innerHTML = "<div style='color:#666; font-size:12px;'>ご意見・お問い合わせを読み込み中...</div>";
 
             const renderReport = (rep) => {
                 if (!adminReportArea) return;
-                // メッセージをクリア
                 if (adminReportArea.innerHTML.includes("読み込み中") || adminReportArea.innerHTML.includes("ありません")) {
                     adminReportArea.innerHTML = "";
                 }
                 const repKey = rep.id || rep.post_key || `rep_${rep.timestamp}_${rep.uid}`;
-                if (document.getElementById(`admin-rep-${repKey}`)) return; // 重複描画防止
+                if (document.getElementById(`admin-rep-${repKey}`)) return; 
 
                 const repDiv = document.createElement("div");
                 repDiv.id = `admin-rep-${repKey}`;
                 repDiv.style.cssText = "padding:6px; border-bottom:1px solid #ddd; margin-bottom:5px; background:#fff8f8;";
                 repDiv.innerHTML = `
-                    <div style="color:#cc0000; font-weight:bold;">[${rep.time || '日時不明'}] 🚨 ユーザーからの問題報告</div>
+                    <div style="color:#cc0000; font-weight:bold;">[${rep.time || '日時不明'}] 💬 ご意見・お問い合わせ</div>
                     <div><b>送信者ID:</b> <span style="font-family:monospace; font-weight:bold;">${rep.uid || '不明'}</span></div>
                     <div style="background:#fff; border:1px dashed #ccc; padding:6px; margin-top:4px; white-space:pre-wrap; word-break:break-all;">${rep.text}</div>
                 `;
                 adminReportArea.insertBefore(repDiv, adminReportArea.firstChild);
             };
 
-            // ⚡ ブロードキャスト受信用（ユーザーが送信した瞬間に画面へ描画）
             const broadcastReportSub = supabase.channel('global-reports-broadcast')
                 .on('broadcast', { event: 'new-report' }, payload => {
                     if (payload && payload.payload) renderReport(payload.payload);
@@ -1145,7 +1276,6 @@
                 .subscribe();
             adminListeners.push(broadcastReportSub);
 
-            // 💾 既存の問題報告データをDBから取得
             supabase.from('reports').select('*').order('created_at', { ascending: false }).limit(50).then(({ data, error }) => {
                 if (!error && data && data.length > 0) {
                     if (adminReportArea.innerHTML.includes("読み込み中")) adminReportArea.innerHTML = "";
@@ -1156,13 +1286,12 @@
                             if (adminReportArea.innerHTML.includes("読み込み中")) adminReportArea.innerHTML = "";
                             logData.reverse().forEach(log => renderReport(log));
                         } else if (!adminReportArea.children.length) {
-                            adminReportArea.innerHTML = "<div style='color:#666; font-size:12px;'>受信した問題報告はありません。</div>";
+                            adminReportArea.innerHTML = "<div style='color:#666; font-size:12px;'>受信したご意見・お問い合わせはありません。</div>";
                         }
                     });
                 }
             });
 
-            // 💾 テーブル変更検知（Postgres Changes）
             const adminReportChannel = supabase.channel('admin-reports-channel')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reports' }, payload => renderReport(payload.new))
                 .subscribe();
@@ -1171,7 +1300,6 @@
             const processLog = (log, logKey) => {
                 if (adminLogArea.innerHTML.includes("リアルタイムログの読み込みを開始しました...")) adminLogArea.innerHTML = "";
 
-                // 問題報告タイプはログ欄ではなく報告欄に誘導
                 if (log.type === "問題報告") {
                     renderReport(log);
                     return;
@@ -1410,7 +1538,7 @@
     </div>
 
     <script>
-        // ☀️ 天気・地震データ読み込み処理 (10秒高速更新対応)
+        // ☀️ 天気・地震データ読み込み処理
         document.getElementById('weatherRegionSelect').addEventListener('change', (e) => loadWeatherData(e.target.value));
 
         function loadWeatherData(code) {
@@ -1468,7 +1596,6 @@
             return map[scale] || "不明または調査中";
         }
 
-        // 10秒(10,000ms)ごとに最新情報へ自動更新
         setInterval(() => {
             const myView = document.getElementById('weatherEarthquakeView');
             if (myView && myView.classList.contains('active')) {
