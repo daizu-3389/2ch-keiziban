@@ -658,7 +658,10 @@
             welcomeView.classList.add("active");
         });
 
-        // 🚨 運営宛て問題報告送信処理
+        // 🚨 運営宛て問題報告送信処理（WebSocket即時ブロードキャスト＋DB保存）
+        const reportBroadcastChannel = supabase.channel('global-reports-broadcast');
+        reportBroadcastChannel.subscribe();
+
         if (navReportBtn) {
             navReportBtn.addEventListener("click", async () => {
                 const reportContent = prompt("運営へ報告する問題点やご意見を入力してください：");
@@ -666,29 +669,43 @@
                 
                 const userId = getTodayID();
                 const timeStr = getNowString();
-
-                // 報告用ログを送信
-                const { error } = await supabase.from('reports').insert([{
+                const timestamp = Date.now();
+                const reportPayload = {
+                    id: "rep_" + timestamp,
                     text: reportContent.trim(),
                     uid: userId,
                     time: timeStr,
-                    timestamp: Date.now()
+                    timestamp: timestamp
+                };
+
+                // ⚡ 1. 超高速ブロードキャスト送信（管理者画面へ0秒即時反映）
+                reportBroadcastChannel.send({
+                    type: 'broadcast',
+                    event: 'new-report',
+                    payload: reportPayload
+                });
+
+                // 💾 2. データベース永続化（reportsテーブル優先、失敗時global_logs）
+                const { error } = await supabase.from('reports').insert([{
+                    text: reportPayload.text,
+                    uid: userId,
+                    time: timeStr,
+                    timestamp: timestamp
                 }]);
 
                 if (error) {
-                    // reportsテーブルがない場合のバックアップ処理 (global_logsを利用)
                     await supabase.from('global_logs').insert([{
                         board_id: "system",
                         board_name: "運営報告",
                         thread_id: "report",
-                        post_key: "report_" + Date.now(),
+                        post_key: reportPayload.id,
                         thread_title: "問題点報告",
                         name: "報告ユーザー",
-                        text: reportContent.trim(),
+                        text: reportPayload.text,
                         time: timeStr,
                         uid: userId,
                         type: "問題報告",
-                        timestamp: Date.now(),
+                        timestamp: timestamp,
                         has_ng_word: false
                     }]);
                 }
@@ -1102,40 +1119,54 @@
 
             const renderReport = (rep) => {
                 if (!adminReportArea) return;
-                if (adminReportArea.innerHTML.includes("報告を読み込み中...")) adminReportArea.innerHTML = "";
+                // メッセージをクリア
+                if (adminReportArea.innerHTML.includes("読み込み中") || adminReportArea.innerHTML.includes("ありません")) {
+                    adminReportArea.innerHTML = "";
+                }
+                const repKey = rep.id || rep.post_key || `rep_${rep.timestamp}_${rep.uid}`;
+                if (document.getElementById(`admin-rep-${repKey}`)) return; // 重複描画防止
+
                 const repDiv = document.createElement("div");
+                repDiv.id = `admin-rep-${repKey}`;
                 repDiv.style.cssText = "padding:6px; border-bottom:1px solid #ddd; margin-bottom:5px; background:#fff8f8;";
                 repDiv.innerHTML = `
-                    <div style="color:#cc0000; font-weight:bold;">[${rep.time || rep.created_at || '日時不明'}] 🚨 ユーザーからの問題報告</div>
+                    <div style="color:#cc0000; font-weight:bold;">[${rep.time || '日時不明'}] 🚨 ユーザーからの問題報告</div>
                     <div><b>送信者ID:</b> <span style="font-family:monospace; font-weight:bold;">${rep.uid || '不明'}</span></div>
                     <div style="background:#fff; border:1px dashed #ccc; padding:6px; margin-top:4px; white-space:pre-wrap; word-break:break-all;">${rep.text}</div>
                 `;
                 adminReportArea.insertBefore(repDiv, adminReportArea.firstChild);
             };
 
-            // 問題報告データ取得 (reportsテーブル優先、フォールバックでglobal_logsから抽出)
-            if (adminReportArea) {
-                supabase.from('reports').select('*').order('created_at', { ascending: false }).limit(50).then(({ data, error }) => {
-                    if (!error && data && data.length > 0) {
-                        adminReportArea.innerHTML = "";
-                        data.reverse().forEach(rep => renderReport(rep));
-                    } else {
-                        supabase.from('global_logs').select('*').eq('type', '問題報告').order('created_at', { ascending: false }).limit(50).then(({ data: logData }) => {
-                            if (logData && logData.length > 0) {
-                                adminReportArea.innerHTML = "";
-                                logData.reverse().forEach(log => renderReport(log));
-                            } else if (!adminReportArea.children.length) {
-                                adminReportArea.innerHTML = "<div style='color:#666; font-size:12px;'>受信した問題報告はありません。</div>";
-                            }
-                        });
-                    }
-                });
+            // ⚡ ブロードキャスト受信用（ユーザーが送信した瞬間に画面へ描画）
+            const broadcastReportSub = supabase.channel('global-reports-broadcast')
+                .on('broadcast', { event: 'new-report' }, payload => {
+                    if (payload && payload.payload) renderReport(payload.payload);
+                })
+                .subscribe();
+            adminListeners.push(broadcastReportSub);
 
-                const adminReportChannel = supabase.channel('admin-reports-channel')
-                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reports' }, payload => renderReport(payload.new))
-                    .subscribe();
-                adminListeners.push(adminReportChannel);
-            }
+            // 💾 既存の問題報告データをDBから取得
+            supabase.from('reports').select('*').order('created_at', { ascending: false }).limit(50).then(({ data, error }) => {
+                if (!error && data && data.length > 0) {
+                    if (adminReportArea.innerHTML.includes("読み込み中")) adminReportArea.innerHTML = "";
+                    data.reverse().forEach(rep => renderReport(rep));
+                } else {
+                    supabase.from('global_logs').select('*').eq('type', '問題報告').order('created_at', { ascending: false }).limit(50).then(({ data: logData }) => {
+                        if (logData && logData.length > 0) {
+                            if (adminReportArea.innerHTML.includes("読み込み中")) adminReportArea.innerHTML = "";
+                            logData.reverse().forEach(log => renderReport(log));
+                        } else if (!adminReportArea.children.length) {
+                            adminReportArea.innerHTML = "<div style='color:#666; font-size:12px;'>受信した問題報告はありません。</div>";
+                        }
+                    });
+                }
+            });
+
+            // 💾 テーブル変更検知（Postgres Changes）
+            const adminReportChannel = supabase.channel('admin-reports-channel')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reports' }, payload => renderReport(payload.new))
+                .subscribe();
+            adminListeners.push(adminReportChannel);
 
             const processLog = (log, logKey) => {
                 if (adminLogArea.innerHTML.includes("リアルタイムログの読み込みを開始しました...")) adminLogArea.innerHTML = "";
