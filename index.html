@@ -6,139 +6,252 @@
     <title>名無し世界の掲示板 Ver. 2.0.0</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
-        body { background-color: #fafaf0; color: #000; font-family: "MS Pゴシック", "MS PGothic", "Mona", "Noto Sans JP", sans-serif; font-size: 14px; margin: 12px; padding: 0; line-height: 1.4; }
+        
+        /* 平成2ch風ベーススタイル */
+        body { 
+            background-color: #efefef; 
+            color: #000000; 
+            font-family: "MS PGothic", "ＭＳ Ｐゴシック", "Mona", "Osaka-mono", monospace, sans-serif; 
+            font-size: 16px; 
+            margin: 8px; 
+            padding: 0; 
+            line-height: 1.3; 
+        }
+        
+        /* 平成インターネット伝統のリンクカラー */
         a { color: #0000ff; text-decoration: underline; cursor: pointer; }
-        a:hover { color: #ff0000; }
+        a:visited { color: #551a8b; }
+        a:hover { color: #ff0000; background-color: #ffff00; }
         
         .view-section { display: none; }
         .view-section.active { display: block; }
         
-        .nav-text { font-size: 12px; background-color: #efefef; border: 1px solid #ccc; padding: 4px 8px; margin-bottom: 15px; color: #333; }
-        h1.site-title { color: #ff0000; font-size: 26px; text-align: center; margin: 0; font-weight: bold; }
-        .sub-title { font-size: 12px; text-align: center; margin-bottom: 20px; color: #000; }
+        /* 2ch上部ナビゲーションバー風 */
+        .nav-text { 
+            font-size: 13px; 
+            background-color: #d4d0c8; 
+            border: 2px outset #ffffff; 
+            padding: 3px 6px; 
+            margin-bottom: 12px; 
+            color: #000; 
+        }
+        
+        /* 平成感満載のタイトルロゴ */
+        h1.site-title { 
+            color: #ff0000; 
+            font-size: 28px; 
+            text-align: center; 
+            margin: 5px 0 0 0; 
+            font-weight: bold; 
+            font-family: "MS PGothic", sans-serif;
+            text-shadow: 1px 1px 0px #808080;
+        }
+        .sub-title { 
+            font-size: 13px; 
+            text-align: center; 
+            margin-bottom: 15px; 
+            color: #666; 
+        }
 
-        .split-container { display: flex; gap: 15px; margin-top: 15px; align-items: flex-start; }
-        .sidebar-box { width: 220px; flex-shrink: 0; background-color: #efefef; border: 1px solid #ccc; padding: 10px; max-height: 85vh; overflow-y: auto; position: sticky; top: 10px; }
-        .sidebar-box .cat-title { font-weight: bold; color: #af0000; margin-top: 10px; font-size: 12px; border-bottom: 1px dashed #999; padding-bottom: 2px; }
+        /* 2chサイドバー・板メニュー風 */
+        .split-container { display: flex; gap: 10px; margin-top: 10px; align-items: flex-start; }
+        .sidebar-box { 
+            width: 210px; 
+            flex-shrink: 0; 
+            background-color: #e0e0e0; 
+            border: 2px outset #ffffff; 
+            padding: 6px; 
+            max-height: 85vh; 
+            overflow-y: auto; 
+            position: sticky; 
+            top: 10px; 
+        }
+        .sidebar-box .cat-title { 
+            font-weight: bold; 
+            color: #000080; 
+            margin-top: 8px; 
+            font-size: 13px; 
+            border-bottom: 1px solid #808080; 
+            padding-bottom: 1px; 
+            background-color: #c0c0c0;
+            padding-left: 2px;
+        }
         .sidebar-box .cat-title:first-child { margin-top: 0; }
-        .sidebar-box .board-links-area { padding: 4px 0 4px 5px; line-height: 1.7; }
-        .sidebar-box .board-link { font-size: 12px; margin-right: 8px; display: inline-block; }
+        .sidebar-box .board-links-area { padding: 3px 0 3px 3px; line-height: 1.5; }
+        .sidebar-box .board-link { font-size: 13px; margin-right: 4px; display: inline-block; }
 
         .main-content-box { flex-grow: 1; min-width: 0; }
-        .board-title { color: #ff0000; font-size: 20px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
-        .thread-list-box { background-color: #fff; border: 1px solid #ccc; padding: 10px; }
-        .thread-line { margin-bottom: 6px; font-size: 14px; }
-        .thread-header-title { color: #ff0000; font-size: 22px; font-weight: bold; margin: 10px 0 15px 0; border-bottom: 2px solid #ff0000; padding-bottom: 3px; }
+        .board-title { 
+            color: #ff0000; 
+            font-size: 20px; 
+            font-weight: bold; 
+            margin-bottom: 8px; 
+            border-bottom: 2px solid #ff0000; 
+            padding-bottom: 2px; 
+        }
+        .thread-list-box { 
+            background-color: #fffff0; 
+            border: 1px solid #808080; 
+            padding: 8px; 
+        }
+        .thread-line { margin-bottom: 4px; font-size: 15px; }
+        .thread-header-title { 
+            color: #ff0000; 
+            font-size: 22px; 
+            font-weight: bold; 
+            margin: 5px 0 10px 0; 
+            border-bottom: 2px solid #ff0000; 
+            padding-bottom: 2px; 
+        }
         
-        .posts-box { background-color: #fff; border: 1px solid #ccc; padding: 15px; max-height: 55vh; overflow-y: auto; }
-        .post-group { scroll-margin-top: 40px; }
-        .post-group:target { background-color: #fff0cc; }
-        .post-dt { font-size: 13px; margin-top: 16px; color: #000; }
-        .post-dt b { color: #008000; } 
-        .post-id { color: #666; font-family: monospace; margin-left: 5px; }
-        .post-dd { margin-left: 25px; margin-top: 2px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-all; font-size: 14px; color: #000; }
+        /* レス表示領域（2chスレ画面風） */
+        .posts-box { 
+            background-color: #efefef; 
+            border: 2px inset #ffffff; 
+            padding: 10px; 
+            max-height: 60vh; 
+            overflow-y: auto; 
+        }
+        .post-group { scroll-margin-top: 40px; border-bottom: 1px dotted #ccc; padding-bottom: 8px; }
+        .post-group:target { background-color: #ffffcc; }
+        .post-dt { font-size: 14px; margin-top: 10px; color: #000; }
+        .post-dt b { color: #008000; } /* 2chの緑名前 */
+        .post-id { color: #000; font-family: "MS PGothic", monospace; margin-left: 5px; }
+        .post-dd { 
+            margin-left: 20px; 
+            margin-top: 4px; 
+            margin-bottom: 10px; 
+            white-space: pre-wrap; 
+            word-break: break-all; 
+            font-size: 16px; 
+            color: #000; 
+            font-family: "MS PGothic", "ＭＳ Ｐゴシック", "Mona", monospace;
+        }
         .res-anchor { color: #0000ff; text-decoration: underline; cursor: pointer; }
 
+        /* PopUp（ポップアップ） */
         #res-preview-popup {
-            display: none; position: fixed; z-index: 5000; background: #fffff0; border: 1px solid #999; padding: 8px 10px;
-            max-width: 380px; min-width: 200px; font-size: 12px; box-shadow: 3px 3px 10px rgba(0,0,0,0.25); pointer-events: none; line-height: 1.5;
+            display: none; position: fixed; z-index: 5000; background: #fffff0; border: 2px solid #000; padding: 6px 8px;
+            max-width: 400px; min-width: 200px; font-size: 13px; box-shadow: 2px 2px 0px #808080; pointer-events: none; line-height: 1.4;
         }
         #res-preview-popup.visible { display: block; }
-        #res-preview-popup .rp-dt { color: #333; margin-bottom: 4px; border-bottom: 1px dashed #bbb; padding-bottom: 3px; }
+        #res-preview-popup .rp-dt { color: #000; margin-bottom: 4px; border-bottom: 1px solid #808080; padding-bottom: 2px; }
         #res-preview-popup .rp-dt b { color: #008000; }
-        #res-preview-popup .rp-dd { color: #000; white-space: pre-wrap; word-break: break-all; max-height: 180px; overflow: hidden; }
+        #res-preview-popup .rp-dd { color: #000; white-space: pre-wrap; word-break: break-all; max-height: 180px; overflow: hidden; font-size: 14px; }
 
-        .form-container { background-color: #efefef; border: 1px solid #ccc; padding: 10px; margin-top: 20px; max-width: 600px; }
-        .form-container h3 { margin: 0 0 10px 0; font-size: 13px; color: #af0000; border-bottom: 1px solid #ccc; padding-bottom: 2px; }
-        .form-row { margin-bottom: 6px; }
-        .form-row label { font-size: 12px; font-weight: bold; display: inline-block; width: 90px; }
-        .form-row input[type="text"] { width: 220px; border: 1px solid #aaa; font-size: 13px; padding: 2px; background: #fff; color: #000; }
-        .form-row textarea { width: 100%; max-width: 500px; border: 1px solid #aaa; font-size: 14px; padding: 4px; font-family: inherit; background: #fff; color: #000; }
-        .btn-submit { font-size: 12px; font-weight: bold; padding: 2px 15px; cursor: pointer; background: #eee; border: 1px solid #666; color: #000; }
-        .btn-submit:hover { background: #ddd; }
+        /* フォーム系（Windowsクラシックスタイル風） */
+        .form-container { background-color: #d4d0c8; border: 2px outset #ffffff; padding: 8px; margin-top: 15px; max-width: 600px; }
+        .form-container h3 { margin: 0 0 8px 0; font-size: 13px; color: #000; background-color: #000080; color: #fff; padding: 2px 4px; font-weight: bold; }
+        .form-row { margin-bottom: 5px; }
+        .form-row label { font-size: 12px; font-weight: bold; display: inline-block; width: 80px; color: #000; }
+        .form-row input[type="text"] { width: 220px; border: 2px inset #ffffff; font-size: 13px; padding: 2px; background: #fff; color: #000; font-family: "MS PGothic", sans-serif; border-radius: 0; }
+        .form-row textarea { width: 100%; max-width: 500px; border: 2px inset #ffffff; font-size: 14px; padding: 3px; font-family: "MS PGothic", sans-serif; background: #fff; color: #000; border-radius: 0; }
+        .btn-submit { 
+            font-size: 12px; 
+            font-weight: bold; 
+            padding: 3px 12px; 
+            cursor: pointer; 
+            background: #d4d0c8; 
+            border: 2px outset #ffffff; 
+            color: #000; 
+            border-radius: 0;
+            font-family: "MS PGothic", sans-serif;
+        }
+        .btn-submit:active { border-style: inset; }
+        .btn-submit:hover { background: #e0e0e0; }
 
-        .thread-search-box { width: 100%; padding: 4px 8px; font-size: 13px; border: 1px solid #aaa; margin-bottom: 8px; background: #fff; color: #000; }
-        .img-toggle-btn { font-size: 11px; color: #0066cc; background: none; border: 1px solid #0066cc; border-radius: 3px; padding: 1px 6px; cursor: pointer; margin-top: 4px; display: inline-block; }
-        .img-toggle-btn:hover { background: #e8f0fe; }
-        .post-img { max-width: 100%; max-height: 300px; display: none; margin-top: 4px; border: 1px solid #ccc; cursor: zoom-in; border-radius: 2px; }
+        .thread-search-box { width: 100%; padding: 3px; font-size: 13px; border: 2px inset #ffffff; margin-bottom: 6px; background: #fff; color: #000; border-radius: 0; }
+        .img-toggle-btn { 
+            font-size: 11px; 
+            color: #000; 
+            background: #d4d0c8; 
+            border: 1px solid #808080; 
+            border-radius: 0px; 
+            padding: 1px 4px; 
+            cursor: pointer; 
+            margin-top: 2px; 
+            display: inline-block; 
+        }
+        .img-toggle-btn:hover { background: #ffff00; }
+        .post-img { max-width: 100%; max-height: 300px; display: none; margin-top: 4px; border: 1px solid #000; cursor: zoom-in; border-radius: 0; }
         .post-img.open { display: block; }
-        #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; }
+        #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; }
         #lightbox.active { display: flex; }
-        #lightbox img { max-width: 95vw; max-height: 90vh; object-fit: contain; border-radius: 4px; cursor: zoom-out; }
-        #lightbox-close { position: absolute; top: 12px; right: 18px; color: #fff; font-size: 28px; cursor: pointer; line-height: 1; }
-        .res-count { font-size: 11px; color: #666; margin-left: 8px; }
-        input:disabled { background-color: #e0e0e0 !important; color: #666 !important; cursor: not-allowed; }
+        #lightbox img { max-width: 95vw; max-height: 90vh; object-fit: contain; border: 2px solid #fff; border-radius: 0; cursor: zoom-out; }
+        #lightbox-close { position: absolute; top: 12px; right: 18px; color: #fff; font-size: 28px; cursor: pointer; line-height: 1; font-family: sans-serif; }
+        .res-count { font-size: 12px; color: #666; margin-left: 6px; }
+        input:disabled { background-color: #c0c0c0 !important; color: #808080 !important; cursor: not-allowed; }
 
-        /* 📄 利用規約モーダル */
-        #termsModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; justify-content: center; align-items: center; }
-        .terms-card { background: #fafaf0; border: 2px solid #ff0000; padding: 20px; max-width: 680px; width: 94%; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
-        .terms-card h2 { color: #ff0000; font-size: 18px; margin: 0 0 10px 0; border-bottom: 2px solid #ff0000; padding-bottom: 5px; text-align: center; flex-shrink: 0; }
-        .terms-subtext { font-size: 11px; margin-bottom: 10px; color: #333; flex-shrink: 0; text-align: center; }
-        .terms-body { flex-grow: 1; overflow-y: auto; border: 1px solid #ccc; padding: 12px; background: #fff; margin-bottom: 15px; font-size: 11px; line-height: 1.6; }
-        .terms-body h3 { font-size: 12px; color: #af0000; margin: 12px 0 4px 0; border-bottom: 1px dashed #af0000; padding-bottom: 2px; }
+        /* 📄 利用規約モーダル（Windows 98ダイアログ風） */
+        #termsModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; justify-content: center; align-items: center; }
+        .terms-card { background: #d4d0c8; border: 2px outset #ffffff; padding: 12px; max-width: 680px; width: 94%; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 2px 2px 0px #000; border-radius: 0; }
+        .terms-card h2 { background: #000080; color: #ffffff; font-size: 14px; margin: -12px -12px 10px -12px; padding: 4px 8px; text-align: left; flex-shrink: 0; font-weight: bold; }
+        .terms-subtext { font-size: 12px; margin-bottom: 8px; color: #000; flex-shrink: 0; text-align: center; font-weight: bold; }
+        .terms-body { flex-grow: 1; overflow-y: auto; border: 2px inset #ffffff; padding: 8px; background: #fff; margin-bottom: 10px; font-size: 12px; line-height: 1.5; color: #000; }
+        .terms-body h3 { font-size: 13px; color: #800000; margin: 10px 0 3px 0; border-bottom: 1px dashed #800000; padding-bottom: 1px; }
         .terms-body h3:first-child { margin-top: 0; }
-        .terms-body p { margin: 0 0 6px 0; }
-        .terms-body ul { margin: 0 0 8px 0; padding-left: 18px; }
-        .terms-body li { margin-bottom: 4px; }
+        .terms-body p { margin: 0 0 4px 0; }
+        .terms-body ul { margin: 0 0 6px 0; padding-left: 16px; }
+        .terms-body li { margin-bottom: 2px; }
 
-        /* 💬 ご意見・お問い合わせモーダル */
-        #reportModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: none; justify-content: center; align-items: center; }
-        .report-card { background: #fafaf0; border: 2px solid #000080; padding: 20px; max-width: 500px; width: 92%; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
-        .report-radio-group { display: flex; gap: 12px; margin: 8px 0; flex-wrap: wrap; font-size: 13px; }
-        .report-radio-group label { cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 3px; }
+        /* 💬 お問い合わせモーダル */
+        #reportModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; display: none; justify-content: center; align-items: center; }
+        .report-card { background: #d4d0c8; border: 2px outset #ffffff; padding: 12px; max-width: 500px; width: 92%; border-radius: 0; box-shadow: 2px 2px 0px #000; }
+        .report-radio-group { display: flex; gap: 10px; margin: 6px 0; flex-wrap: wrap; font-size: 12px; }
+        .report-radio-group label { cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 2px; }
 
         @media (max-width: 768px) {
-            body { margin: 8px; font-size: 13px; }
-            h1.site-title { font-size: 22px; }
-            .sub-title { font-size: 11px; margin-bottom: 15px; }
-            .split-container { flex-direction: column; gap: 10px; margin-top: 10px; }
-            .sidebar-box { width: 100%; position: static; max-height: 200px; margin-bottom: 10px; }
+            body { margin: 4px; font-size: 14px; }
+            h1.site-title { font-size: 20px; }
+            .sub-title { font-size: 11px; margin-bottom: 10px; }
+            .split-container { flex-direction: column; gap: 8px; margin-top: 8px; }
+            .sidebar-box { width: 100%; position: static; max-height: 180px; margin-bottom: 8px; }
             .main-content-box { width: 100%; }
-            .post-dd { margin-left: 10px; margin-top: 4px; }
-            .posts-box { max-height: 35vh; }
-            .form-container { width: 100%; max-width: 100%; padding: 12px; }
-            .form-row label { display: block; width: 100%; margin-bottom: 4px; font-size: 13px; }
-            .form-row input[type="text"], .form-row textarea { width: 100%; max-width: 100%; font-size: 15px; padding: 6px; }
-            .btn-submit { width: 100%; padding: 8px; font-size: 14px; margin-top: 5px; }
-            #adminView > div[style*="display: flex"] { flex-direction: column !important; gap: 10px !important; }
-            #adminLogArea { height: 40vh !important; }
-            #adminAlertArea, #adminUserList { height: 25vh !important; }
-            .admin-delete-btn, .admin-warn-btn { padding: 6px 12px !important; font-size: 12px !important; margin: 4px 2px !important; display: inline-block; }
+            .post-dd { margin-left: 8px; margin-top: 2px; font-size: 14px; }
+            .posts-box { max-height: 45vh; }
+            .form-container { width: 100%; max-width: 100%; padding: 8px; }
+            .form-row label { display: block; width: 100%; margin-bottom: 2px; font-size: 12px; }
+            .form-row input[type="text"], .form-row textarea { width: 100%; max-width: 100%; font-size: 14px; padding: 4px; }
+            .btn-submit { width: 100%; padding: 6px; font-size: 13px; margin-top: 4px; }
+            #adminView > div[style*="display: flex"] { flex-direction: column !important; gap: 8px !important; }
+            #adminLogArea { height: 35vh !important; }
+            #adminAlertArea, #adminUserList { height: 20vh !important; }
+            .admin-delete-btn, .admin-warn-btn { padding: 4px 8px !important; font-size: 11px !important; margin: 2px 1px !important; display: inline-block; }
         }
 
-        /* 🌙 ダークモード */
-        body.dark { background-color: #1a1a1a !important; color: #d0d0d0 !important; }
-        body.dark a { color: #7799ff; }
-        body.dark a:hover { color: #ff6666; }
-        body.dark .nav-text { background-color: #2a2a2a; border-color: #444; color: #bbb; }
-        body.dark .sidebar-box, body.dark .thread-list-box, body.dark .posts-box, body.dark .form-container { background-color: #242424; border-color: #444; }
-        body.dark .sidebar-box .cat-title, body.dark .board-title, body.dark .form-container h3, body.dark .thread-header-title { color: #ff6666; border-color: #444; }
-        body.dark .post-dt { color: #bbb; }
-        body.dark .post-dt b { color: #66bb66; }
-        body.dark .post-id { color: #888; }
-        body.dark .post-dd { color: #ccc; }
-        body.dark .post-group:target { background-color: #3a3200; }
-        body.dark .form-row input[type="text"], body.dark .form-row textarea, body.dark .thread-search-box, body.dark #weatherRegionSelect, body.dark #dictKeywordInput { background: #2e2e2e !important; color: #d0d0d0 !important; border-color: #555 !important; }
-        body.dark .btn-submit { background: #333; border-color: #666; color: #ccc; }
+        /* 🌙 ダークモード（平成掲示板の黒背景・グリーン/オレンジテキスト風） */
+        body.dark { background-color: #000000 !important; color: #00ff00 !important; }
+        body.dark a { color: #00ffff; }
+        body.dark a:hover { color: #ffff00; background-color: #000; }
+        body.dark .nav-text { background-color: #222; border-color: #555; color: #00ff00; }
+        body.dark .sidebar-box, body.dark .thread-list-box, body.dark .posts-box, body.dark .form-container { background-color: #111; border-color: #444; }
+        body.dark .sidebar-box .cat-title, body.dark .board-title, body.dark .form-container h3, body.dark .thread-header-title { color: #ff0000; border-color: #444; background-color: #222; }
+        body.dark .post-dt { color: #00ff00; }
+        body.dark .post-dt b { color: #ffff00; }
+        body.dark .post-id { color: #aaa; }
+        body.dark .post-dd { color: #00ff00; }
+        body.dark .post-group:target { background-color: #333300; }
+        body.dark .form-row input[type="text"], body.dark .form-row textarea, body.dark .thread-search-box, body.dark #weatherRegionSelect, body.dark #dictKeywordInput { background: #000 !important; color: #00ff00 !important; border-color: #555 !important; }
+        body.dark .btn-submit { background: #333; border-color: #666; color: #00ff00; }
         body.dark .btn-submit:hover { background: #444; }
-        body.dark .res-anchor { color: #7799ff; }
+        body.dark .res-anchor { color: #00ffff; }
         body.dark .post-img { border-color: #555; }
         body.dark #lightbox { background: rgba(0,0,0,0.92); }
-        body.dark .img-toggle-btn { color: #7799ff; border-color: #7799ff; }
-        body.dark .img-toggle-btn:hover { background: #2a3050; }
-        body.dark #res-preview-popup { background: #1e2a1e; border-color: #555; color: #ccc; }
-        body.dark #res-preview-popup .rp-dt { color: #aaa; border-color: #444; }
-        body.dark #res-preview-popup .rp-dt b { color: #66bb66; }
-        body.dark #res-preview-popup .rp-dd { color: #ccc; }
-        body.dark .terms-card { background: #242424; color: #d0d0d0; border-color: #ff6666; }
-        body.dark .terms-card h2 { color: #ff6666; border-color: #ff6666; }
-        body.dark .terms-subtext { color: #aaa; }
-        body.dark .terms-body { background: #1e1e1e; border-color: #444; color: #bbb; }
-        body.dark .terms-body h3 { color: #ff6666; border-color: #ff6666; }
-        body.dark .report-card { background: #242424; border-color: #7799ff; color: #d0d0d0; }
-        body.dark #dictResultArea { background: #1e1e1e !important; border-color: #444 !important; color: #ccc !important; }
-        .dark-mode-btn { background: #eee; color: #555; border: 1px solid #aaa; border-radius: 3px; font-size: 11px; padding: 1px 7px; cursor: pointer; margin-left: 8px; vertical-align: middle; }
-        body.dark .dark-mode-btn { background: #333; color: #ffd700; border-color: #666; }
+        body.dark .img-toggle-btn { color: #00ff00; background: #222; border-color: #555; }
+        body.dark .img-toggle-btn:hover { background: #444; }
+        body.dark #res-preview-popup { background: #111; border-color: #00ff00; color: #00ff00; }
+        body.dark #res-preview-popup .rp-dt { color: #00ff00; border-color: #444; }
+        body.dark #res-preview-popup .rp-dt b { color: #ffff00; }
+        body.dark #res-preview-popup .rp-dd { color: #00ff00; }
+        body.dark .terms-card { background: #222; color: #00ff00; border-color: #555; }
+        body.dark .terms-card h2 { color: #ffffff; background: #000080; }
+        body.dark .terms-subtext { color: #00ff00; }
+        body.dark .terms-body { background: #000; border-color: #555; color: #00ff00; }
+        body.dark .terms-body h3 { color: #ff0000; border-color: #ff0000; }
+        body.dark .report-card { background: #222; border-color: #555; color: #00ff00; }
+        body.dark #dictResultArea { background: #000 !important; border-color: #555 !important; color: #00ff00 !important; }
+        .dark-mode-btn { background: #d4d0c8; color: #000; border: 2px outset #ffffff; font-size: 11px; padding: 1px 5px; cursor: pointer; margin-left: 6px; vertical-align: middle; border-radius: 0; font-family: "MS PGothic", sans-serif; }
+        body.dark .dark-mode-btn { background: #333; color: #ffff00; border-color: #666; }
     </style>
 </head>
 <body>
@@ -185,11 +298,11 @@
                 <h3>第5章 運営者の権限および自動規制システム</h3>
                 <p><b>第11条（リアルタイム監視およびログ出力）:</b> 運営者は、サービスの健全性を維持するため、すべての投稿、ID、IPログ、NGワード検知結果をリアルタイムで監視・記録します。</p>
                 <p><b>第12条（投稿の修正・削除・無効化権限）:</b> 運営者は、本規約に違反した投稿、または運営上不適当と判断した投稿を、利用者に事前通知することなく直ちに修正、削除、非表示にできる権利を有します。</p>
+
                 <p><b>第13条（自動規制機能およびペナルティ）:</b> 当サービスには自動NGワード判定、連投クールダウン制御（10秒制限）、およびID時限ロック機構が搭載されています。違反が検知された場合、システムにより自動的に書き込み拒否、一時的または永久的なアクセスカット（IP/IDブロック）、警告ポップアップの発効が行われます。</p>
 
                 <h3>第6章 免責事項</h3>
                 <p><b>第14条（サービスの不保証）:</b> 運営者は、当サービスの完全性、正確性、確実性、有用性、および継続性について一切保証いたしません。</p>
-
                 <p><b>第15条（トラブルおよび損害の免責・自己責任）:</b> 利用者が当サービス内での投稿や書き込み等において、自身の氏名、本名、その他の個人情報が開示・漏洩・特定された場合、その理由や経緯を問わずすべて利用者の自己責任とし、運営者は一切の責任を負いません。また、利用者同士、または利用者と第三者との間で生じた紛争、損害、不利益についても、運営者は理由のいかんを問わず一切の責任を負いません。外部API（気象・地震情報等）のデータ遅延や誤りについても同様とします。</p>
                 <p><b>第16条（サービスの中断・終了）:</b> 運営者は、システム保守、障害対応、天災、その他やむを得ない事情により、利用者に事前通知することなくサービスを一時停止または永久に終了することができます。</p>
 
@@ -206,7 +319,7 @@
             </div>
 
             <div style="text-align: center; flex-shrink: 0;">
-                <button id="agreeTermsBtn" class="btn-submit" style="padding: 10px 24px; font-size: 13px; font-weight: bold; background: #ff0000; color: #fff; border: none; cursor: pointer; border-radius: 3px;">全条文（全23条）に同意して掲示板を利用する</button>
+                <button id="agreeTermsBtn" class="btn-submit" style="padding: 6px 20px; font-size: 13px; font-weight: bold; background: #d4d0c8; color: #000; border: 2px outset #ffffff; cursor: pointer; border-radius: 0;">全条文（全23条）に同意して掲示板を利用する</button>
             </div>
         </div>
     </div>
@@ -214,8 +327,8 @@
     <!-- 💬 ご意見・お問い合わせモーダル -->
     <div id="reportModal">
         <div class="report-card">
-            <h3 style="margin: 0 0 10px 0; color: #000080; font-size: 15px; border-bottom: 2px solid #000080; padding-bottom: 5px;">💬 ご意見・お問い合わせフォーム</h3>
-            <div style="font-size: 12px; margin-bottom: 12px; color: #555;">お問い合わせの種類を選択し、詳しい内容を入力してください。</div>
+            <h3 style="margin: 0 0 10px 0; background: #000080; color: #fff; font-size: 14px; padding: 3px 6px;">💬 ご意見・お問い合わせフォーム</h3>
+            <div style="font-size: 12px; margin-bottom: 10px; color: #000;">お問い合わせの種類を選択し、詳しい内容を入力してください。</div>
             <div class="form-row">
                 <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">【問い合わせの種類】</label>
                 <div class="report-radio-group">
@@ -227,17 +340,17 @@
             </div>
             <div class="form-row" style="margin-top: 10px;">
                 <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">【内容】</label>
-                <textarea id="reportTextContent" rows="4" style="width: 100%; border: 1px solid #aaa; padding: 6px; font-size: 13px;" placeholder="詳しい内容を入力してください..."></textarea>
+                <textarea id="reportTextContent" rows="4" style="width: 100%; border: 2px inset #ffffff; padding: 4px; font-size: 13px;" placeholder="詳しい内容を入力してください..."></textarea>
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
-                <button class="btn-submit" id="cancelReportBtn" style="background: #ccc; border: 1px solid #888;">キャンセル</button>
-                <button class="btn-submit" id="submitReportBtn" style="background: #ff0000; color: #fff; border: none; padding: 4px 18px;">送信する</button>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                <button class="btn-submit" id="cancelReportBtn">キャンセル</button>
+                <button class="btn-submit" id="submitReportBtn" style="font-weight: bold;">送信する</button>
             </div>
         </div>
     </div>
 
     <div class="nav-text">
-        <a id="navHomeBtn">■板一覧（ホーム）</a> ＞ <span id="currentLocationDisplay">トップページ</span> <span style="font-size:10px; color:#888; margin-left:5px;">Ver. 2.0.0</span>
+        <a id="navHomeBtn">■板一覧（ホーム）</a> ＞ <span id="currentLocationDisplay">トップページ</span> <span style="font-size:10px; color:#666; margin-left:5px;">Ver. 2.0.0</span>
         <span style="float: right;">👥 現在: <b id="onlineCount">0</b> 人 | <a id="navReportBtn">💬 ご意見・お問い合わせ</a> | <a id="navAdminBtn">⚙️ 管理者部屋</a><button class="dark-mode-btn" id="darkModeToggle">🌙 ダーク</button></span>
         <div style="clear: both;"></div>
     </div>
@@ -249,7 +362,7 @@
         <div class="split-container">
             
             <div class="sidebar-box">
-                <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #666; border-bottom: 1px solid #ccc; padding-bottom: 2px;">📁 板メニュー</div>
+                <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px; color: #000; border-bottom: 1px solid #808080; padding-bottom: 2px;">📁 板メニュー</div>
                 <div id="bbsMenuArea"></div>
                 <div class="cat-title">⏳ 外部情報</div>
                 <div class="board-links-area">
@@ -261,9 +374,9 @@
             <div class="main-content-box">
                 
                 <div id="welcomeView" class="view-section active">
-                    <div style="background-color: #fff; border: 1px solid #ccc; padding: 30px; text-align: center; color: #444;">
-                        <p style="font-weight: bold; font-size: 15px; margin: 0 0 10px 0; color: #ff0000;">★ 名無し世界の掲示板へようこそ！ (Ver. 2.0.0) ★</p>
-                        <p style="margin: 0; font-size: 13px;">上側の「板メニュー」から、好きな掲示板を選択してください。</p>
+                    <div style="background-color: #fffff0; border: 1px solid #808080; padding: 25px; text-align: center; color: #000;">
+                        <p style="font-weight: bold; font-size: 16px; margin: 0 0 10px 0; color: #ff0000;">★ 名無し世界の掲示板へようこそ！ (Ver. 2.0.0) ★</p>
+                        <p style="margin: 0; font-size: 13px;">左側の「板メニュー」から、好きな掲示板を選択してください。</p>
                     </div>
                 </div>
 
@@ -283,7 +396,7 @@
                 </div>
 
                 <div id="threadDetailView" class="view-section">
-                    <div style="margin-bottom: 10px;"><a id="backToListViewBtn" style="font-size: 13px; font-weight: bold;">[ 📂 板のスレ一覧に戻る ]</a></div>
+                    <div style="margin-bottom: 8px;"><a id="backToListViewBtn" style="font-size: 13px; font-weight: bold;">[ 📂 板のスレ一覧に戻る ]</a></div>
                     <div class="thread-header-title" id="currentThreadTitle">スレッドタイトル</div>
                     <div class="posts-box" id="postList"></div>
 
@@ -299,10 +412,10 @@
                 <!-- 🌤️ 天気・地震情報ビュー -->
                 <div id="weatherEarthquakeView" class="view-section">
                     <div class="board-title">🌍 日本地域の天気・地震情報 <span style="font-size:11px; font-weight:normal; color:#008000;">(10秒毎リアルタイム自動更新中)</span></div>
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
-                        <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 12px; border: 1px solid #ccc;">
-                            <h3 style="color: #af0000; border-bottom: 1px dashed #999; margin: 0 0 10px 0; font-size: 14px;">☀️ 地域別 天気予報</h3>
-                            <select id="weatherRegionSelect" style="padding: 4px; font-size: 13px; margin-bottom: 10px; width: 100%; border: 1px solid #aaa; background: #fff; color: #000;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
+                        <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 10px; border: 1px solid #808080;">
+                            <h3 style="color: #000080; border-bottom: 1px dashed #808080; margin: 0 0 8px 0; font-size: 14px;">☀️ 地域別 天気予報</h3>
+                            <select id="weatherRegionSelect" style="padding: 2px; font-size: 13px; margin-bottom: 8px; width: 100%; border: 2px inset #ffffff; background: #fff; color: #000;">
                                 <option value="130000">東京都</option>
                                 <option value="016000">北海道（石狩・空知・後志）</option>
                                 <option value="020000">青森県</option><option value="030000">岩手県</option>
@@ -329,11 +442,11 @@
                                 <option value="450000">宮崎県</option><option value="460100">鹿児島県</option>
                                 <option value="471000">沖縄県</option>
                             </select>
-                            <div id="weatherResultArea" style="font-size: 13px; line-height: 1.6; min-height: 100px;">選択した地域の天気を読み込み中...</div>
+                            <div id="weatherResultArea" style="font-size: 13px; line-height: 1.5; min-height: 100px;">選択した地域の天気を読み込み中...</div>
                         </div>
-                        <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 12px; border: 1px solid #ccc;">
-                            <h3 style="color: #af0000; border-bottom: 1px dashed #999; margin: 0 0 10px 0; font-size: 14px;">🌋 最近の地震情報 (最新5件)</h3>
-                            <div id="earthquakeResultArea" style="font-size: 13px; line-height: 1.6; min-height: 100px;">地震情報を取得中...</div>
+                        <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 10px; border: 1px solid #808080;">
+                            <h3 style="color: #000080; border-bottom: 1px dashed #808080; margin: 0 0 8px 0; font-size: 14px;">🌋 最近の地震情報 (最新5件)</h3>
+                            <div id="earthquakeResultArea" style="font-size: 13px; line-height: 1.5; min-height: 100px;">地震情報を取得中...</div>
                         </div>
                     </div>
                 </div>
@@ -343,18 +456,18 @@
                     <div class="board-title">📖 外部辞書・百科事典 検索</div>
                     <div class="form-container" style="max-width: 100%;">
                         <h3>🔍 単語・用語の検索</h3>
-                        <div class="form-row" style="display: flex; gap: 8px;">
-                            <input type="text" id="dictKeywordInput" style="flex: 1; font-size: 14px; padding: 5px;" placeholder="調べたい言葉を入力...">
-                            <button class="btn-submit" id="dictSearchBtn" style="padding: 5px 20px;">検索</button>
+                        <div class="form-row" style="display: flex; gap: 6px;">
+                            <input type="text" id="dictKeywordInput" style="flex: 1; font-size: 14px; padding: 3px;" placeholder="調べたい言葉を入力...">
+                            <button class="btn-submit" id="dictSearchBtn" style="padding: 3px 15px;">検索</button>
                         </div>
-                        <div id="dictQuickLinks" style="margin: 12px 0; font-size: 12px; display: none;">
-                            <b>🔗 各種外部辞書で直接調べる:</b><br style="margin-bottom: 4px;">
-                            <a id="linkGoo" target="_blank" class="res-anchor" style="margin-right: 12px;">[Goo辞書]</a>
-                            <a id="linkWeblio" target="_blank" class="res-anchor" style="margin-right: 12px;">[Weblio国語辞典]</a>
-                            <a id="linkKotobank" target="_blank" class="res-anchor" style="margin-right: 12px;">[コトバンク]</a>
+                        <div id="dictQuickLinks" style="margin: 10px 0; font-size: 12px; display: none;">
+                            <b>🔗 各種外部辞書で直接調べる:</b><br style="margin-bottom: 2px;">
+                            <a id="linkGoo" target="_blank" class="res-anchor" style="margin-right: 10px;">[Goo辞書]</a>
+                            <a id="linkWeblio" target="_blank" class="res-anchor" style="margin-right: 10px;">[Weblio国語辞典]</a>
+                            <a id="linkKotobank" target="_blank" class="res-anchor" style="margin-right: 10px;">[コトバンク]</a>
                             <a id="linkWiki" target="_blank" class="res-anchor">[Wikipedia]</a>
                         </div>
-                        <div id="dictResultArea" style="background: #fff; border: 1px solid #ccc; padding: 12px; min-height: 120px; font-size: 13px; line-height: 1.6; margin-top: 10px;">
+                        <div id="dictResultArea" style="background: #fff; border: 2px inset #ffffff; padding: 10px; min-height: 120px; font-size: 13px; line-height: 1.5; margin-top: 8px;">
                             <span style="color: #666;">単語を入力して「検索」ボタンを押すと概要が表示され、各種外部辞書への直通リンクが生成されます。</span>
                         </div>
                     </div>
@@ -362,50 +475,50 @@
 
                 <div id="adminView" class="view-section">
                     <div class="board-title" style="color: #000080; border-bottom: 2px solid #000080;">🛠️ 管理者専用 リアルタイム監視ロビー</div>
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
                         <div style="flex: 2; min-width: 300px;">
-                            <h3 style="font-size: 13px; color: #000080; margin: 0 0 5px 0; font-weight: bold;">📋 全掲示板リアルタイムログ (全件監視中)</h3>
-                            <div id="adminLogArea" style="background: #fff; border: 1px solid #ccc; padding: 10px; height: 60vh; overflow-y: auto;"></div>
+                            <h3 style="font-size: 13px; color: #000080; margin: 0 0 4px 0; font-weight: bold;">📋 全掲示板リアルタイムログ (全件監視中)</h3>
+                            <div id="adminLogArea" style="background: #fff; border: 2px inset #ffffff; padding: 8px; height: 60vh; overflow-y: auto;"></div>
                         </div>
-                        <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 15px;">
+                        <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 10px;">
                             <div>
-                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
                                     <h3 style="font-size: 13px; color: #ff0000; margin: 0; font-weight: bold;">🚨 荒らし・NGワード検知アラート</h3>
-                                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size:11px; font-weight:bold; color:#333; user-select:none;">
-                                        <div id="autoNgToggleWrap" style="position:relative; width:38px; height:20px; background:#ccc; border-radius:10px; transition:background 0.2s; flex-shrink:0;">
-                                            <div id="autoNgToggleKnob" style="position:absolute; top:2px; left:2px; width:16px; height:16px; background:#fff; border-radius:50%; transition:left 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>
+                                    <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:11px; font-weight:bold; color:#333; user-select:none;">
+                                        <div id="autoNgToggleWrap" style="position:relative; width:36px; height:18px; background:#ccc; border:1px solid #808080; transition:background 0.2s; flex-shrink:0;">
+                                            <div id="autoNgToggleKnob" style="position:absolute; top:1px; left:1px; width:14px; height:14px; background:#fff; border:1px solid #808080; transition:left 0.2s;"></div>
                                         </div>
                                         <span id="autoNgToggleLabel" style="color:#999;">自動処理: OFF</span>
                                     </label>
                                 </div>
-                                <div id="adminAlertArea" style="background: #fff0f0; border: 1px solid #ff0000; padding: 10px; height: 28vh; overflow-y: auto;"></div>
+                                <div id="adminAlertArea" style="background: #fff0f0; border: 2px inset #ffffff; padding: 8px; height: 28vh; overflow-y: auto;"></div>
                             </div>
                             <div>
-                                <h3 style="font-size: 13px; color: #333; margin: 0 0 5px 0; font-weight: bold;">👥 オンラインID一覧 (<span id="adminOnlineCount">0</span>人)</h3>
-                                <div id="adminUserList" style="background: #fff; border: 1px solid #ccc; padding: 10px; height: 28vh; overflow-y: auto;"></div>
+                                <h3 style="font-size: 13px; color: #333; margin: 0 0 4px 0; font-weight: bold;">👥 オンラインID一覧 (<span id="adminOnlineCount">0</span>人)</h3>
+                                <div id="adminUserList" style="background: #fff; border: 2px inset #ffffff; padding: 8px; height: 28vh; overflow-y: auto;"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div style="margin-top: 15px; border-top: 2px solid #000080; padding-top: 10px;">
-                        <h3 style="font-size: 13px; color: #cc0000; margin: 0 0 5px 0; font-weight: bold;">📩 運営宛てご意見・お問い合わせ一覧 (リアルタイム)</h3>
-                        <div id="adminReportArea" style="background: #fff; border: 1px solid #ccc; padding: 10px; height: 18vh; overflow-y: auto; font-size: 12px;"></div>
+                    <div style="margin-top: 12px; border-top: 2px solid #000080; padding-top: 8px;">
+                        <h3 style="font-size: 13px; color: #cc0000; margin: 0 0 4px 0; font-weight: bold;">📩 運営宛てご意見・お問い合わせ一覧 (リアルタイム)</h3>
+                        <div id="adminReportArea" style="background: #fff; border: 2px inset #ffffff; padding: 8px; height: 18vh; overflow-y: auto; font-size: 12px;"></div>
                     </div>
 
-                    <div style="margin-top: 25px; border-top: 2px solid #000080; padding-top: 15px;">
-                        <h3 style="font-size: 13px; color: #000080; margin: 0 0 10px 0; font-weight: bold;">📁 板別スレッド・メッセージ全件閲覧・管理ブラウザ (巡回・一括管理用)</h3>
-                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="margin-top: 20px; border-top: 2px solid #000080; padding-top: 10px;">
+                        <h3 style="font-size: 13px; color: #000080; margin: 0 0 8px 0; font-weight: bold;">📁 板別スレッド・メッセージ全件閲覧・管理ブラウザ (巡回・一括管理用)</h3>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <div style="flex: 1; min-width: 180px;">
-                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #333;">1. 板を選択</div>
-                                <select id="adminBoardSelect" style="width: 100%; padding: 4px; font-size: 12px; border: 1px solid #ccc; background: #fff; color: #000;"></select>
+                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #333;">1. 板を選択</div>
+                                <select id="adminBoardSelect" style="width: 100%; padding: 2px; font-size: 12px; border: 2px inset #ffffff; background: #fff; color: #000;"></select>
                             </div>
                             <div style="flex: 1.5; min-width: 220px;">
-                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #333;">2. スレッド一覧</div>
-                                <div id="adminThreadListArea" style="background: #fff; border: 1px solid #ccc; padding: 8px; height: 35vh; overflow-y: auto; font-size: 12px;"></div>
+                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #333;">2. スレッド一覧</div>
+                                <div id="adminThreadListArea" style="background: #fff; border: 2px inset #ffffff; padding: 6px; height: 35vh; overflow-y: auto; font-size: 12px;"></div>
                             </div>
                             <div style="flex: 2.5; min-width: 300px;">
-                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #333;">3. メッセージ全件表示 (選択スレッド内)</div>
-                                <div id="adminPostListArea" style="background: #fff; border: 1px solid #ccc; padding: 8px; height: 35vh; overflow-y: auto; font-size: 12px;"></div>
+                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #333;">3. メッセージ全件表示 (選択スレッド内)</div>
+                                <div id="adminPostListArea" style="background: #fff; border: 2px inset #ffffff; padding: 6px; height: 35vh; overflow-y: auto; font-size: 12px;"></div>
                             </div>
                         </div>
                     </div>
@@ -1179,7 +1292,7 @@
             const label = document.getElementById("autoNgToggleLabel");
             if (!wrap) return;
             wrap.style.background = window.autoNgMode ? "#cc0000" : "#ccc";
-            knob.style.left = window.autoNgMode ? "20px" : "2px";
+            knob.style.left = window.autoNgMode ? "19px" : "1px";
             label.textContent = window.autoNgMode ? "自動処理: ON" : "自動処理: OFF";
             label.style.color = window.autoNgMode ? "#cc0000" : "#999";
         }
