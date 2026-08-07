@@ -31,9 +31,20 @@
             font-size: 13px; 
             background-color: #d4d0c8; 
             border: 2px outset #ffffff; 
-            padding: 3px 6px; 
+            padding: 4px 8px; 
             margin-bottom: 12px; 
             color: #000; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .nav-right-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         
         /* 平成感満載のタイトルロゴ */
@@ -187,7 +198,7 @@
         .terms-card { background: #d4d0c8; border: 2px outset #ffffff; padding: 12px; max-width: 680px; width: 94%; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 2px 2px 0px #000; border-radius: 0; }
         .terms-card h2 { background: #000080; color: #ffffff; font-size: 14px; margin: -12px -12px 10px -12px; padding: 4px 8px; text-align: left; flex-shrink: 0; font-weight: bold; }
         .terms-subtext { font-size: 12px; margin-bottom: 8px; color: #000; flex-shrink: 0; text-align: center; font-weight: bold; }
-        .terms-body { flex-grow: 1; overflow-y: auto; border: 2px inset #ffffff; padding: 8px; background: #fff; margin-bottom: 10px; font-size: 12px; line-height: 1.5; color: #000; }
+        .terms-body { flex-grow: 1; overflow-y: auto; border: 2px inset #ffffff; padding: 8px; background: #fff; margin-bottom: 10px; font-size: 12px; line-height: 1.5; color: #000; -webkit-overflow-scrolling: touch; }
         .terms-body h3 { font-size: 13px; color: #800000; margin: 10px 0 3px 0; border-bottom: 1px dashed #800000; padding-bottom: 1px; }
         .terms-body h3:first-child { margin-top: 0; }
         .terms-body p { margin: 0 0 4px 0; }
@@ -200,23 +211,90 @@
         .report-radio-group { display: flex; gap: 10px; margin: 6px 0; flex-wrap: wrap; font-size: 12px; }
         .report-radio-group label { cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 2px; }
 
+        /* 📱 スマホ（モバイル）専用最適化スタイル */
         @media (max-width: 768px) {
             body { margin: 4px; font-size: 14px; }
+            
+            /* ナビゲーションバーのモバイルレイアウト */
+            .nav-text {
+                font-size: 12px;
+                padding: 6px;
+            }
+            .nav-right-area {
+                width: 100%;
+                justify-content: flex-start;
+                margin-top: 4px;
+                padding-top: 4px;
+                border-top: 1px dashed #a09d96;
+            }
+            
             h1.site-title { font-size: 20px; }
             .sub-title { font-size: 11px; margin-bottom: 10px; }
             .split-container { flex-direction: column; gap: 8px; margin-top: 8px; }
-            .sidebar-box { width: 100%; position: static; max-height: 180px; margin-bottom: 8px; }
+            
+            /* サイドバーのタッチ・スクロール快適化 */
+            .sidebar-box { 
+                width: 100%; 
+                position: static; 
+                max-height: 200px; 
+                margin-bottom: 8px; 
+                -webkit-overflow-scrolling: touch;
+            }
+            .sidebar-box .board-link {
+                padding: 3px 6px;
+                margin-bottom: 2px;
+                line-height: 1.8;
+            }
+
             .main-content-box { width: 100%; }
-            .post-dd { margin-left: 8px; margin-top: 2px; font-size: 14px; }
-            .posts-box { max-height: 45vh; }
+            .post-dd { margin-left: 6px; margin-top: 2px; font-size: 15px; }
+            
+            /* スレッド表示領域 */
+            .posts-box { 
+                max-height: 55vh; 
+                padding: 6px;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* iOS Safariでの入力時自動ズームを防止 (16px化) */
             .form-container { width: 100%; max-width: 100%; padding: 8px; }
             .form-row label { display: block; width: 100%; margin-bottom: 2px; font-size: 12px; }
-            .form-row input[type="text"], .form-row textarea { width: 100%; max-width: 100%; font-size: 14px; padding: 4px; }
-            .btn-submit { width: 100%; padding: 6px; font-size: 13px; margin-top: 4px; }
+            .form-row input[type="text"], 
+            .form-row textarea,
+            .thread-search-box,
+            #weatherRegionSelect,
+            #dictKeywordInput { 
+                width: 100%; 
+                max-width: 100%; 
+                font-size: 16px !important; 
+                padding: 6px; 
+            }
+            
+            /* スマホで押しやすい大ボタン */
+            .btn-submit { 
+                width: 100%; 
+                padding: 10px; 
+                font-size: 14px; 
+                margin-top: 6px; 
+                min-height: 40px;
+            }
+            
+            .dark-mode-btn {
+                padding: 3px 8px;
+                font-size: 12px;
+            }
+
+            /* 管理者画面のスマホ最適化 */
             #adminView > div[style*="display: flex"] { flex-direction: column !important; gap: 8px !important; }
-            #adminLogArea { height: 35vh !important; }
-            #adminAlertArea, #adminUserList { height: 20vh !important; }
-            .admin-delete-btn, .admin-warn-btn { padding: 4px 8px !important; font-size: 11px !important; margin: 2px 1px !important; display: inline-block; }
+            #adminLogArea { height: 40vh !important; }
+            #adminAlertArea, #adminUserList { height: 22vh !important; }
+            .admin-delete-btn, .admin-warn-btn { padding: 6px 10px !important; font-size: 12px !important; margin: 3px 2px !important; display: inline-block; }
+            
+            /* レスプレビューの横幅調整 */
+            #res-preview-popup { max-width: 90vw; }
+            
+            /* モーダルのフィット感 */
+            .terms-card, .report-card { width: 96%; padding: 10px; max-height: 92vh; }
         }
 
         /* 🌙 ダークモード */
@@ -350,9 +428,15 @@
     </div>
 
     <div class="nav-text">
-        <a id="navHomeBtn">■板一覧（ホーム）</a> ＞ <span id="currentLocationDisplay">トップページ</span> <span style="font-size:10px; color:#666; margin-left:5px;">Ver. 2.0.0</span>
-        <span style="float: right;">👥 現在: <b id="onlineCount">0</b> 人 | <a id="navReportBtn">💬 ご意見・お問い合わせ</a> | <a id="navAdminBtn">⚙️ 管理者部屋</a><button class="dark-mode-btn" id="darkModeToggle">🌙 ダーク</button></span>
-        <div style="clear: both;"></div>
+        <div>
+            <a id="navHomeBtn">■板一覧（ホーム）</a> ＞ <span id="currentLocationDisplay">トップページ</span> <span style="font-size:10px; color:#666; margin-left:5px;">Ver. 2.0.0</span>
+        </div>
+        <div class="nav-right-area">
+            <span>👥 現在: <b id="onlineCount">0</b> 人</span> | 
+            <a id="navReportBtn">💬 ご意見・お問い合わせ</a> | 
+            <a id="navAdminBtn">⚙️ 管理者部屋</a>
+            <button class="dark-mode-btn" id="darkModeToggle">🌙 ダーク</button>
+        </div>
     </div>
 
     <div class="main-container">
@@ -1667,77 +1751,7 @@
     <!-- 🔍 ライトボックス -->
     <div id="lightbox">
         <span id="lightbox-close">✕</span>
-        <img id="lightbox-img" src="" alt="">
+        <img id="lightbox-img" src="" alt="拡大画像">
     </div>
-
-    <script>
-        // ☀️ 天気・地震データ読み込み処理
-        document.getElementById('weatherRegionSelect').addEventListener('change', (e) => loadWeatherData(e.target.value));
-
-        function loadWeatherData(code) {
-            const resultArea = document.getElementById('weatherResultArea');
-            if (!resultArea) return;
-            
-            fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`)
-                .then(res => res.json())
-                .then(data => {
-                    const reportDatetime = new Date(data[0].reportDatetime).toLocaleString('ja-JP');
-                    let html = `<div style="font-size:11px; color:#666; margin-bottom:8px;">発表時刻: ${reportDatetime}</div>`;
-                    data[0].timeSeries[0].areas.forEach(area => {
-                        html += `<div style="font-weight:bold; color:#008000; margin-top:8px;">【${area.area.name}】</div>`;
-                        const times = data[0].timeSeries[0].timeDefines;
-                        area.weathers.forEach((weather, index) => {
-                            const dateStr = new Date(times[index]).toLocaleDateString('ja-JP', {month:'short', day:'numeric'});
-                            html += `<div style="margin-left:10px; margin-bottom:4px;"><b>${dateStr}:</b> ${weather}</div>`;
-                        });
-                    });
-                    resultArea.innerHTML = html;
-                })
-                .catch(() => {
-                    if (resultArea.textContent.includes("読み込み中")) {
-                        resultArea.textContent = "天気情報の取得に失敗しました。";
-                    }
-                });
-        }
-
-        function loadEarthquakeData() {
-            const resultArea = document.getElementById('earthquakeResultArea');
-            if (!resultArea) return;
-            
-            fetch('https://api.p2pquake.net/v2/history?codes=551&limit=5')
-                .then(res => res.json())
-                .then(data => {
-                    let html = data.length === 0 ? "最近の地震情報はありません。" : "";
-                    data.forEach(item => {
-                        html += `<div style="border-bottom: 1px dashed #ccc; padding: 6px 0;">
-                            <b>発生時刻:</b> ${item.earthquake.time}<br>
-                            <b>震源地:</b> ${item.earthquake.hypocenter.name || "不明"}<br>
-                            <b>最大震度:</b> <span style="color:#ff0000; font-weight:bold;">${parseMaxScale(item.earthquake.maxScale)}</span>
-                        </div>`;
-                    });
-                    resultArea.innerHTML = html;
-                })
-                .catch(() => {
-                    if (resultArea.textContent.includes("取得中")) {
-                        resultArea.textContent = "地震情報の取得に失敗しました。";
-                    }
-                });
-        }
-
-        function parseMaxScale(scale) {
-            const map = { 10: "1", 20: "2", 30: "3", 40: "4", 45: "5弱", 50: "5強", 55: "6弱", 60: "6強", 70: "7" };
-            return map[scale] || "不明";
-        }
-
-        // 天気・地震情報の10秒毎自動更新（画面が表示されている場合）
-        setInterval(() => {
-            const weatherView = document.getElementById('weatherEarthquakeView');
-            if (weatherView && weatherView.classList.contains('active')) {
-                const select = document.getElementById('weatherRegionSelect');
-                if (select) loadWeatherData(select.value);
-                loadEarthquakeData();
-            }
-        }, 10000);
-    </script>
 </body>
 </html>
