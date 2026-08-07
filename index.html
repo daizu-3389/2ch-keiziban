@@ -214,86 +214,26 @@
         /* 📱 スマホ（モバイル）専用最適化スタイル */
         @media (max-width: 768px) {
             body { margin: 4px; font-size: 14px; }
-            
-            /* ナビゲーションバーのモバイルレイアウト */
-            .nav-text {
-                font-size: 12px;
-                padding: 6px;
-            }
-            .nav-right-area {
-                width: 100%;
-                justify-content: flex-start;
-                margin-top: 4px;
-                padding-top: 4px;
-                border-top: 1px dashed #a09d96;
-            }
-            
+            .nav-text { font-size: 12px; padding: 6px; }
+            .nav-right-area { width: 100%; justify-content: flex-start; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #a09d96; }
             h1.site-title { font-size: 20px; }
             .sub-title { font-size: 11px; margin-bottom: 10px; }
             .split-container { flex-direction: column; gap: 8px; margin-top: 8px; }
-            
-            /* サイドバーのタッチ・スクロール快適化 */
-            .sidebar-box { 
-                width: 100%; 
-                position: static; 
-                max-height: 200px; 
-                margin-bottom: 8px; 
-                -webkit-overflow-scrolling: touch;
-            }
-            .sidebar-box .board-link {
-                padding: 3px 6px;
-                margin-bottom: 2px;
-                line-height: 1.8;
-            }
-
+            .sidebar-box { width: 100%; position: static; max-height: 200px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
+            .sidebar-box .board-link { padding: 3px 6px; margin-bottom: 2px; line-height: 1.8; }
             .main-content-box { width: 100%; }
             .post-dd { margin-left: 6px; margin-top: 2px; font-size: 15px; }
-            
-            /* スレッド表示領域 */
-            .posts-box { 
-                max-height: 55vh; 
-                padding: 6px;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            /* iOS Safariでの入力時自動ズームを防止 (16px化) */
+            .posts-box { max-height: 55vh; padding: 6px; -webkit-overflow-scrolling: touch; }
             .form-container { width: 100%; max-width: 100%; padding: 8px; }
             .form-row label { display: block; width: 100%; margin-bottom: 2px; font-size: 12px; }
-            .form-row input[type="text"], 
-            .form-row textarea,
-            .thread-search-box,
-            #weatherRegionSelect,
-            #dictKeywordInput { 
-                width: 100%; 
-                max-width: 100%; 
-                font-size: 16px !important; 
-                padding: 6px; 
-            }
-            
-            /* スマホで押しやすい大ボタン */
-            .btn-submit { 
-                width: 100%; 
-                padding: 10px; 
-                font-size: 14px; 
-                margin-top: 6px; 
-                min-height: 40px;
-            }
-            
-            .dark-mode-btn {
-                padding: 3px 8px;
-                font-size: 12px;
-            }
-
-            /* 管理者画面のスマホ最適化 */
+            .form-row input[type="text"], .form-row textarea, .thread-search-box, #weatherRegionSelect, #dictKeywordInput { width: 100%; max-width: 100%; font-size: 16px !important; padding: 6px; }
+            .btn-submit { width: 100%; padding: 10px; font-size: 14px; margin-top: 6px; min-height: 40px; }
+            .dark-mode-btn { padding: 3px 8px; font-size: 12px; }
             #adminView > div[style*="display: flex"] { flex-direction: column !important; gap: 8px !important; }
             #adminLogArea { height: 40vh !important; }
             #adminAlertArea, #adminUserList { height: 22vh !important; }
             .admin-delete-btn, .admin-warn-btn { padding: 6px 10px !important; font-size: 12px !important; margin: 3px 2px !important; display: inline-block; }
-            
-            /* レスプレビューの横幅調整 */
             #res-preview-popup { max-width: 90vw; }
-            
-            /* モーダルのフィット感 */
             .terms-card, .report-card { width: 96%; padding: 10px; max-height: 92vh; }
         }
 
@@ -376,7 +316,6 @@
                 <h3>第5章 運営者の権限および自動規制システム</h3>
                 <p><b>第11条（リアルタイム監視およびログ出力）:</b> 運営者は、サービスの健全性を維持するため、すべての投稿、ID、IPログ、NGワード検知結果をリアルタイムで監視・記録します。</p>
                 <p><b>第12条（投稿の修正・削除・無効化権限）:</b> 運営者は、本規約に違反した投稿、または運営上不適当と判断した投稿を、利用者に事前通知することなく直ちに修正、削除、非表示にできる権利を有します。</p>
-
                 <p><b>第13条（自動規制機能およびペナルティ）:</b> 当サービスには自動NGワード判定、連投クールダウン制御（10秒制限）、およびID時限ロック機構が搭載されています。違反が検知された場合、システムにより自動的に書き込み拒否、一時的または永久的なアクセスカット（IP/IDブロック）、警告ポップアップの発効が行われます。</p>
 
                 <h3>第6章 免責事項</h3>
@@ -622,7 +561,7 @@
             termsModal.style.display = "none";
         });
 
-        // ⚡ Supabase設定（修正済みのAPIキーを適用）
+        // ⚡ Supabase設定
         const SUPABASE_URL = "https://yeotqaorheaxjppylfgg.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inllb3RxYW9yaGVheGpwcHlsZmdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MzA1NzMsImV4cCI6MjEwMTUwNjU3M30.GqbadI7MCM3h6xT9Ro-OJVzjgjmVip9vn5G6iA9KxoM";
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1039,6 +978,76 @@
             if (e.key === "Enter") performDictSearch();
         });
 
+        // 🌤️ 天気予報データ取得関数 (気象庁API)
+        async function loadWeatherData(areaCode) {
+            const weatherResultArea = document.getElementById("weatherResultArea");
+            if (!weatherResultArea) return;
+            weatherResultArea.innerHTML = "<div style='color:#666;'>天気データを取得中...</div>";
+            try {
+                const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
+                if (!res.ok) throw new Error("天気データの取得に失敗しました");
+                const data = await res.json();
+                
+                const timeSeries = data[0].timeSeries[0];
+                const area = timeSeries.areas[0];
+                const weatherList = area.weathers;
+                const times = timeSeries.timeDefines;
+
+                let html = `<div style="font-weight:bold; color:#000080; margin-bottom:5px;">📍 ${area.area.name} の天気予報</div>`;
+                html += "<ul style='margin:0; padding-left:18px;'>";
+                for (let i = 0; i < Math.min(weatherList.length, 3); i++) {
+                    const date = new Date(times[i]);
+                    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+                    html += `<li style='margin-bottom:3px;'><b>${dateStr}:</b> ${weatherList[i]}</li>`;
+                }
+                html += "</ul>";
+                weatherResultArea.innerHTML = html;
+            } catch (err) {
+                weatherResultArea.innerHTML = `<div style='color:red;'>天気の取得に失敗しました: ${err.message}</div>`;
+            }
+        }
+
+        // 🌋 地震情報データ取得関数 (P2P地震情報API)
+        async function loadEarthquakeData() {
+            const eqArea = document.getElementById("earthquakeResultArea");
+            if (!eqArea) return;
+            try {
+                const res = await fetch("https://api.p2pquake.net/v2/history?codes=551&limit=5");
+                if (!res.ok) throw new Error("地震データの取得に失敗しました");
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    eqArea.innerHTML = "<div style='color:#666;'>直近の地震情報はありません。</div>";
+                    return;
+                }
+
+                let html = "<div style='display:flex; flex-direction:column; gap:6px;'>";
+                data.forEach(eq => {
+                    const earth = eq.earthquake;
+                    const hypocenter = earth && earth.hypocenter ? earth.hypocenter.name : "不明";
+                    const maxScale = earth && earth.maxScale ? (earth.maxScale / 10).toFixed(1) : "不明";
+                    const time = eq.time || "日時不明";
+                    
+                    html += `
+                        <div style="border-bottom:1px dashed #ccc; padding-bottom:4px;">
+                            <div><b>【発生日時】</b> ${time}</div>
+                            <div><b>【震源地】</b> ${hypocenter} (M${earth && earth.hypocenter ? earth.hypocenter.magnitude : '不明'})</div>
+                            <div><b>【最大震度】</b> <span style="color:#cc0000; font-weight:bold;">震度 ${maxScale}</span></div>
+                        </div>
+                    `;
+                });
+                html += "</div>";
+                eqArea.innerHTML = html;
+            } catch (err) {
+                eqArea.innerHTML = `<div style='color:red;'>地震情報の取得に失敗しました。</div>`;
+            }
+        }
+
+        // 天気地域変更イベント
+        document.getElementById("weatherRegionSelect")?.addEventListener("change", (e) => {
+            loadWeatherData(e.target.value);
+        });
+
         navWeatherBtn.addEventListener("click", () => {
             hideAllViews();
             weatherEarthquakeView.classList.add("active");
@@ -1046,6 +1055,13 @@
             loadWeatherData(document.getElementById('weatherRegionSelect').value);
             loadEarthquakeData();
         });
+
+        // 10秒毎の自動更新タイマー設定
+        setInterval(() => {
+            if (weatherEarthquakeView.classList.contains("active")) {
+                loadEarthquakeData();
+            }
+        }, 10000);
 
         let allThreadData = {}; 
 
@@ -1750,8 +1766,9 @@
 
     <!-- 🔍 ライトボックス -->
     <div id="lightbox">
-        <span id="lightbox-close">✕</span>
+        <span id="lightbox-close">&times;</span>
         <img id="lightbox-img" src="" alt="拡大画像">
     </div>
+
 </body>
 </html>
