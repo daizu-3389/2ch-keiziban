@@ -998,7 +998,7 @@
             }
         }
 
-        // 🔧 【修正箇所】スレッド取得時の堅牢化・エラーログ表示処理
+        // 🔧 スレッド取得処理
         async function loadThreadList(boardId) {
             if (currentThreadChannel) supabase.removeChannel(currentThreadChannel);
             threadList.innerHTML = "<div style='color:#666; font-size:12px;'>読み込み中...</div>";
@@ -1006,10 +1006,8 @@
             if (searchInput) searchInput.value = "";
 
             const fetchThreads = async () => {
-                // 1st: created_atでの降順ソートを試行
                 let { data, error } = await supabase.from('threads').select('*').eq('board_id', boardId).order('created_at', { ascending: false });
                 
-                // created_at カラムがない場合などのフォールバック (idソート)
                 if (error) {
                     console.warn("created_at での取得に失敗。id ソートで再試行します:", error.message);
                     const fallback = await supabase.from('threads').select('*').eq('board_id', boardId).order('id', { ascending: false });
@@ -1122,7 +1120,6 @@
             const fetchPosts = async () => {
                 let { data, error } = await supabase.from('posts').select('*').eq('thread_id', threadId).order('created_at', { ascending: true });
                 if (error) {
-                    // created_atで失敗した場合のフォールバック
                     const fallback = await supabase.from('posts').select('*').eq('thread_id', threadId).order('id', { ascending: true });
                     data = fallback.data;
                 }
@@ -1732,6 +1729,7 @@
             return map[scale] || "不明または調査中";
         }
 
+        // 10秒毎に天気・地震画面が開かれている場合に自動更新
         setInterval(() => {
             const myView = document.getElementById('weatherEarthquakeView');
             if (myView && myView.classList.contains('active')) {
