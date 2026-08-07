@@ -157,6 +157,30 @@
         .form-row label { font-size: 12px; font-weight: bold; display: inline-block; width: 80px; color: #000; }
         .form-row input[type="text"] { width: 220px; border: 2px inset #ffffff; font-size: 13px; padding: 2px; background: #fff; color: #000; font-family: "MS PGothic", sans-serif; border-radius: 0; }
         .form-row textarea { width: 100%; max-width: 500px; border: 2px inset #ffffff; font-size: 14px; padding: 3px; font-family: "MS PGothic", sans-serif; background: #fff; color: #000; border-radius: 0; }
+        
+        /* 検索エリアの親要素 */
+        .search-container {
+          display: flex;
+          gap: 8px; /* 入力欄とボタンの間隔 */
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        /* テキスト入力欄 */
+        .search-container input[type="text"] {
+          flex: 1;          /* 空きスペースいっぱいに広げる */
+          min-width: 0;     /* Flexbox内で潰れるのを防ぐ（超重要！） */
+          padding: 8px;
+          font-size: 16px;  /* iPhoneでタップした時に勝手にズームされるのを防ぐ */
+        }
+
+        /* 検索ボタン */
+        .search-container input[type="submit"],
+        .search-container button {
+          white-space: nowrap; /* ボタンの文字が途中で改行されるのを防ぐ */
+          padding: 8px 16px;
+        }
+
         .btn-submit { 
             font-size: 12px; 
             font-weight: bold; 
@@ -214,26 +238,86 @@
         /* 📱 スマホ（モバイル）専用最適化スタイル */
         @media (max-width: 768px) {
             body { margin: 4px; font-size: 14px; }
-            .nav-text { font-size: 12px; padding: 6px; }
-            .nav-right-area { width: 100%; justify-content: flex-start; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #a09d96; }
+            
+            /* ナビゲーションバーのモバイルレイアウト */
+            .nav-text {
+                font-size: 12px;
+                padding: 6px;
+            }
+            .nav-right-area {
+                width: 100%;
+                justify-content: flex-start;
+                margin-top: 4px;
+                padding-top: 4px;
+                border-top: 1px dashed #a09d96;
+            }
+            
             h1.site-title { font-size: 20px; }
             .sub-title { font-size: 11px; margin-bottom: 10px; }
             .split-container { flex-direction: column; gap: 8px; margin-top: 8px; }
-            .sidebar-box { width: 100%; position: static; max-height: 200px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
-            .sidebar-box .board-link { padding: 3px 6px; margin-bottom: 2px; line-height: 1.8; }
+            
+            /* サイドバーのタッチ・スクロール快適化 */
+            .sidebar-box { 
+                width: 100%; 
+                position: static; 
+                max-height: 200px; 
+                margin-bottom: 8px; 
+                -webkit-overflow-scrolling: touch;
+            }
+            .sidebar-box .board-link {
+                padding: 3px 6px;
+                margin-bottom: 2px;
+                line-height: 1.8;
+            }
+
             .main-content-box { width: 100%; }
             .post-dd { margin-left: 6px; margin-top: 2px; font-size: 15px; }
-            .posts-box { max-height: 55vh; padding: 6px; -webkit-overflow-scrolling: touch; }
+            
+            /* スレッド表示領域 */
+            .posts-box { 
+                max-height: 55vh; 
+                padding: 6px;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* iOS Safariでの入力時自動ズームを防止 (16px化) */
             .form-container { width: 100%; max-width: 100%; padding: 8px; }
             .form-row label { display: block; width: 100%; margin-bottom: 2px; font-size: 12px; }
-            .form-row input[type="text"], .form-row textarea, .thread-search-box, #weatherRegionSelect, #dictKeywordInput { width: 100%; max-width: 100%; font-size: 16px !important; padding: 6px; }
-            .btn-submit { width: 100%; padding: 10px; font-size: 14px; margin-top: 6px; min-height: 40px; }
-            .dark-mode-btn { padding: 3px 8px; font-size: 12px; }
+            .form-row input[type="text"], 
+            .form-row textarea,
+            .thread-search-box,
+            #weatherRegionSelect,
+            #dictKeywordInput { 
+                width: 100%; 
+                max-width: 100%; 
+                font-size: 16px !important; 
+                padding: 6px; 
+            }
+            
+            /* スマホで押しやすい大ボタン */
+            .btn-submit { 
+                width: 100%; 
+                padding: 10px; 
+                font-size: 14px; 
+                margin-top: 6px; 
+                min-height: 40px;
+            }
+            
+            .dark-mode-btn {
+                padding: 3px 8px;
+                font-size: 12px;
+            }
+
+            /* 管理者画面のスマホ最適化 */
             #adminView > div[style*="display: flex"] { flex-direction: column !important; gap: 8px !important; }
             #adminLogArea { height: 40vh !important; }
             #adminAlertArea, #adminUserList { height: 22vh !important; }
             .admin-delete-btn, .admin-warn-btn { padding: 6px 10px !important; font-size: 12px !important; margin: 3px 2px !important; display: inline-block; }
+            
+            /* レスプレビューの横幅調整 */
             #res-preview-popup { max-width: 90vw; }
+            
+            /* モーダルのフィット感 */
             .terms-card, .report-card { width: 96%; padding: 10px; max-height: 92vh; }
         }
 
@@ -316,6 +400,7 @@
                 <h3>第5章 運営者の権限および自動規制システム</h3>
                 <p><b>第11条（リアルタイム監視およびログ出力）:</b> 運営者は、サービスの健全性を維持するため、すべての投稿、ID、IPログ、NGワード検知結果をリアルタイムで監視・記録します。</p>
                 <p><b>第12条（投稿の修正・削除・無効化権限）:</b> 運営者は、本規約に違反した投稿、または運営上不適当と判断した投稿を、利用者に事前通知することなく直ちに修正、削除、非表示にできる権利を有します。</p>
+
                 <p><b>第13条（自動規制機能およびペナルティ）:</b> 当サービスには自動NGワード判定、連投クールダウン制御（10秒制限）、およびID時限ロック機構が搭載されています。違反が検知された場合、システムにより自動的に書き込み拒否、一時的または永久的なアクセスカット（IP/IDブロック）、警告ポップアップの発効が行われます。</p>
 
                 <h3>第6章 免責事項</h3>
@@ -330,6 +415,7 @@
                 <h3>第8章 雑則</h3>
                 <p><b>第19条（損害賠償責任）:</b> 利用者が本規約に違反し、当サービスまたは運営者に損害を与えた場合、該当利用者は生じた一切の損害（弁護士費用を含む）を賠償する義務を負います。</p>
                 <p><b>第20条（分離可能性）:</b> 本規約のいずれかの条項が法令に基づき無効と判断された場合でも、その他の条項は引き続き完全な効力を有するものとします。</p>
+
                 <p><b>第21条（権利義務の譲渡禁止）:</b> 利用者は、当サービスの利用に基づく権利または義務を第三者に譲渡、貸与、担保提供することはできません。</p>
                 <p><b>第22条（準拠法）:</b> 本規約の解釈および適用にあたっては、日本法を準拠法とします。</p>
                 <p><b>第23条（専属的合意管轄）:</b> 当サービスに関して生じた裁判上の紛争については、当サイト運営者の所在地を管轄する裁判所を第一審の専属的合意管轄裁判所とします。</p>
@@ -479,9 +565,9 @@
                     <div class="board-title">📖 外部辞書・百科事典 検索</div>
                     <div class="form-container" style="max-width: 100%;">
                         <h3>🔍 単語・用語の検索</h3>
-                        <div class="form-row" style="display: flex; gap: 6px;">
-                            <input type="text" id="dictKeywordInput" style="flex: 1; font-size: 14px; padding: 3px;" placeholder="調べたい言葉を入力...">
-                            <button class="btn-submit" id="dictSearchBtn" style="padding: 3px 15px;">検索</button>
+                        <div class="search-container">
+                            <input type="text" id="dictKeywordInput" placeholder="調べたい言葉を入力...">
+                            <button class="btn-submit" id="dictSearchBtn">検索</button>
                         </div>
                         <div id="dictQuickLinks" style="margin: 10px 0; font-size: 12px; display: none;">
                             <b>🔗 各種外部辞書で直接調べる:</b><br style="margin-bottom: 2px;">
@@ -561,7 +647,7 @@
             termsModal.style.display = "none";
         });
 
-        // ⚡ Supabase設定
+        // ⚡ Supabase設定（修正済みのAPIキーを適用）
         const SUPABASE_URL = "https://yeotqaorheaxjppylfgg.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inllb3RxYW9yaGVheGpwcHlsZmdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MzA1NzMsImV4cCI6MjEwMTUwNjU3M30.GqbadI7MCM3h6xT9Ro-OJVzjgjmVip9vn5G6iA9KxoM";
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -978,76 +1064,6 @@
             if (e.key === "Enter") performDictSearch();
         });
 
-        // 🌤️ 天気予報データ取得関数 (気象庁API)
-        async function loadWeatherData(areaCode) {
-            const weatherResultArea = document.getElementById("weatherResultArea");
-            if (!weatherResultArea) return;
-            weatherResultArea.innerHTML = "<div style='color:#666;'>天気データを取得中...</div>";
-            try {
-                const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
-                if (!res.ok) throw new Error("天気データの取得に失敗しました");
-                const data = await res.json();
-                
-                const timeSeries = data[0].timeSeries[0];
-                const area = timeSeries.areas[0];
-                const weatherList = area.weathers;
-                const times = timeSeries.timeDefines;
-
-                let html = `<div style="font-weight:bold; color:#000080; margin-bottom:5px;">📍 ${area.area.name} の天気予報</div>`;
-                html += "<ul style='margin:0; padding-left:18px;'>";
-                for (let i = 0; i < Math.min(weatherList.length, 3); i++) {
-                    const date = new Date(times[i]);
-                    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
-                    html += `<li style='margin-bottom:3px;'><b>${dateStr}:</b> ${weatherList[i]}</li>`;
-                }
-                html += "</ul>";
-                weatherResultArea.innerHTML = html;
-            } catch (err) {
-                weatherResultArea.innerHTML = `<div style='color:red;'>天気の取得に失敗しました: ${err.message}</div>`;
-            }
-        }
-
-        // 🌋 地震情報データ取得関数 (P2P地震情報API)
-        async function loadEarthquakeData() {
-            const eqArea = document.getElementById("earthquakeResultArea");
-            if (!eqArea) return;
-            try {
-                const res = await fetch("https://api.p2pquake.net/v2/history?codes=551&limit=5");
-                if (!res.ok) throw new Error("地震データの取得に失敗しました");
-                const data = await res.json();
-
-                if (!data || data.length === 0) {
-                    eqArea.innerHTML = "<div style='color:#666;'>直近の地震情報はありません。</div>";
-                    return;
-                }
-
-                let html = "<div style='display:flex; flex-direction:column; gap:6px;'>";
-                data.forEach(eq => {
-                    const earth = eq.earthquake;
-                    const hypocenter = earth && earth.hypocenter ? earth.hypocenter.name : "不明";
-                    const maxScale = earth && earth.maxScale ? (earth.maxScale / 10).toFixed(1) : "不明";
-                    const time = eq.time || "日時不明";
-                    
-                    html += `
-                        <div style="border-bottom:1px dashed #ccc; padding-bottom:4px;">
-                            <div><b>【発生日時】</b> ${time}</div>
-                            <div><b>【震源地】</b> ${hypocenter} (M${earth && earth.hypocenter ? earth.hypocenter.magnitude : '不明'})</div>
-                            <div><b>【最大震度】</b> <span style="color:#cc0000; font-weight:bold;">震度 ${maxScale}</span></div>
-                        </div>
-                    `;
-                });
-                html += "</div>";
-                eqArea.innerHTML = html;
-            } catch (err) {
-                eqArea.innerHTML = `<div style='color:red;'>地震情報の取得に失敗しました。</div>`;
-            }
-        }
-
-        // 天気地域変更イベント
-        document.getElementById("weatherRegionSelect")?.addEventListener("change", (e) => {
-            loadWeatherData(e.target.value);
-        });
-
         navWeatherBtn.addEventListener("click", () => {
             hideAllViews();
             weatherEarthquakeView.classList.add("active");
@@ -1055,13 +1071,6 @@
             loadWeatherData(document.getElementById('weatherRegionSelect').value);
             loadEarthquakeData();
         });
-
-        // 10秒毎の自動更新タイマー設定
-        setInterval(() => {
-            if (weatherEarthquakeView.classList.contains("active")) {
-                loadEarthquakeData();
-            }
-        }, 10000);
 
         let allThreadData = {}; 
 
@@ -1766,9 +1775,8 @@
 
     <!-- 🔍 ライトボックス -->
     <div id="lightbox">
-        <span id="lightbox-close">&times;</span>
+        <span id="lightbox-close">✕</span>
         <img id="lightbox-img" src="" alt="拡大画像">
     </div>
-
 </body>
 </html>
