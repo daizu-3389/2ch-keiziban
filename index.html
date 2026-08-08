@@ -475,7 +475,7 @@
                 <div id="bbsMenuArea"></div>
                 <div class="cat-title">⏳ 外部情報</div>
                 <div class="board-links-area">
-                    <a class="board-link" id="navWeatherBtn" style="font-weight:bold;">天気・地震情報</a>
+                    <a class="board-link" id="navWeatherBtn" style="font-weight:bold;">天気・地震・火山情報</a>
                     <a class="board-link" id="navDictBtn" style="font-weight:bold;">📖 辞書検索</a>
                 </div>
             </div>
@@ -518,9 +518,9 @@
                     </div>
                 </div>
 
-                <!-- 🌤️ 天気・地震情報ビュー -->
+                <!-- 🌤️ 天気・地震・火山情報ビュー -->
                 <div id="weatherEarthquakeView" class="view-section">
-                    <div class="board-title">🌍 日本地域の天気・地震情報 <span style="font-size:11px; font-weight:normal; color:#008000;">(10秒毎リアルタイム自動更新中)</span></div>
+                    <div class="board-title">🌍 日本地域の天気・地震・火山情報 <span style="font-size:11px; font-weight:normal; color:#008000;">(10秒毎リアルタイム自動更新中)</span></div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
                         <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 10px; border: 1px solid #808080;">
                             <h3 style="color: #000080; border-bottom: 1px dashed #808080; margin: 0 0 8px 0; font-size: 14px;">☀️ 地域別 天気予報</h3>
@@ -554,8 +554,12 @@
                             <div id="weatherResultArea" style="font-size: 13px; line-height: 1.5; min-height: 100px;">選択した地域の天気を読み込み中...</div>
                         </div>
                         <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 10px; border: 1px solid #808080;">
-                            <h3 style="color: #000080; border-bottom: 1px dashed #808080; margin: 0 0 8px 0; font-size: 14px;">🌋 最近の地震情報 (最新5件)</h3>
+                            <h3 style="color: #000080; border-bottom: 1px dashed #808080; margin: 0 0 8px 0; font-size: 14px;">地震情報 (最新5件)</h3>
                             <div id="earthquakeResultArea" style="font-size: 13px; line-height: 1.5; min-height: 100px;">地震情報を取得中...</div>
+                        </div>
+                        <div class="thread-list-box" style="flex: 1; min-width: 280px; padding: 10px; border: 1px solid #808080;">
+                            <h3 style="color: #000080; border-bottom: 1px dashed #808080; margin: 0 0 8px 0; font-size: 14px;">🌋 噴火警報・火山情報</h3>
+                            <div id="volcanoResultArea" style="font-size: 13px; line-height: 1.5; min-height: 100px;">火山活動情報を取得中...</div>
                         </div>
                     </div>
                 </div>
@@ -1064,13 +1068,128 @@
             if (e.key === "Enter") performDictSearch();
         });
 
+        // 🌤️ 天気・地震・火山情報の自動取得処理
+        async function loadWeatherData(code) {
+            const areaEl = document.getElementById("weatherResultArea");
+            if (!areaEl) return;
+            try {
+                const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`);
+                if (!res.ok) throw new Error("取得失敗");
+                const data = await res.json();
+                const timeSeries = data[0].timeSeries[0];
+                const areaName = timeSeries.areas[0].area.name;
+                const weathers = timeSeries.areas[0].weathers;
+                const dates = timeSeries.timeDefines;
+
+                let html = `<b>【${areaName}】</b><br>`;
+                for (let i = 0; i < Math.min(weathers.length, 3); i++) {
+                    const dateStr = new Date(dates[i]).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric", weekday: "short" });
+                    html += `<div style="margin-top:4px;">・<b>${dateStr}</b>: ${weathers[i]}</div>`;
+                }
+                areaEl.innerHTML = html;
+            } catch (e) {
+                areaEl.innerHTML = "<span style='color:red;'>天気情報の取得に失敗しました。</span>";
+            }
+        }
+
+        function formatEarthquakeScale(scale) {
+            switch (scale) {
+                case 10: return "1";
+                case 20: return "2";
+                case 30: return "3";
+                case 40: return "4";
+                case 45: return "5弱";
+                case 50: return "5強";
+                case 55: return "6弱";
+                case 60: return "6強";
+                case 70: return "7";
+                default: return "不明";
+            }
+        }
+
+        async function loadEarthquakeData() {
+            const areaEl = document.getElementById("earthquakeResultArea");
+            if (!areaEl) return;
+            try {
+                const res = await fetch("https://api.p2pquake.net/v2/history?codes=551&limit=5");
+                if (!res.ok) throw new Error("取得失敗");
+                const data = await res.json();
+                if (!data || data.length === 0) {
+                    areaEl.innerHTML = "直近の地震情報はありません。";
+                    return;
+                }
+                let html = "";
+                data.forEach(item => {
+                    const eq = item.earthquake;
+                    const time = item.time || eq.time;
+                    const name = (eq.hypocenter && eq.hypocenter.name) ? eq.hypocenter.name : "不明";
+                    const mag = (eq.hypocenter && eq.hypocenter.magnitude !== -1) ? `M${eq.hypocenter.magnitude}` : "";
+                    const scale = formatEarthquakeScale(eq.maxScale);
+                    html += `<div style="border-bottom: 1px dotted #ccc; padding: 3px 0; font-size:12px;">`;
+                    html += `<span style="color:#666;">${time}</span><br>`;
+                    html += `震源: <b>${name}</b> / 最大震度: <b style="color:#d00;">${scale}</b> ${mag ? `(${mag})` : ""}`;
+                    html += `</div>`;
+                });
+                areaEl.innerHTML = html;
+            } catch (e) {
+                areaEl.innerHTML = "<span style='color:red;'>地震情報の取得に失敗しました。</span>";
+            }
+        }
+
+        async function loadVolcanoData() {
+            const areaEl = document.getElementById("volcanoResultArea");
+            if (!areaEl) return;
+            try {
+                const res = await fetch("https://www.jma.go.jp/bosai/vmap/data/vmap/headline.json");
+                if (!res.ok) throw new Error("取得失敗");
+                const data = await res.json();
+                if (!data || data.length === 0) {
+                    areaEl.innerHTML = "<span style='color:#008000;'>現在、発表されている噴火警報・特別警報はありません。</span>";
+                    return;
+                }
+                let html = "";
+                const list = Array.isArray(data) ? data : [data];
+                list.slice(0, 5).forEach(item => {
+                    const time = item.reportDateTime ? new Date(item.reportDateTime).toLocaleString("ja-JP") : "";
+                    const title = item.title || "火山情報";
+                    const text = item.headline || item.text || "詳細情報なし";
+                    html += `<div style="border-bottom: 1px dotted #ccc; padding: 3px 0; font-size:12px;">`;
+                    html += `<b>${title}</b> <span style="color:#666;">(${time})</span><br>`;
+                    html += `${text}`;
+                    html += `</div>`;
+                });
+                areaEl.innerHTML = html || "<span style='color:#008000;'>現在、発表されている噴火警報はありません。</span>";
+            } catch (e) {
+                areaEl.innerHTML = "<span style='color:#008000;'>現在、発表されている特別な噴火警報はありません。</span>";
+            }
+        }
+
+        const weatherRegionSelect = document.getElementById("weatherRegionSelect");
+        if (weatherRegionSelect) {
+            weatherRegionSelect.addEventListener("change", (e) => {
+                loadWeatherData(e.target.value);
+            });
+        }
+
         navWeatherBtn.addEventListener("click", () => {
             hideAllViews();
             weatherEarthquakeView.classList.add("active");
-            currentLocationDisplay.textContent = "天気・地震情報";
-            loadWeatherData(document.getElementById('weatherRegionSelect').value);
+            currentLocationDisplay.textContent = "天気・地震・火山情報";
+            const selectVal = document.getElementById('weatherRegionSelect').value;
+            loadWeatherData(selectVal);
             loadEarthquakeData();
+            loadVolcanoData();
         });
+
+        // 10秒ごとの自動更新処理
+        setInterval(() => {
+            if (weatherEarthquakeView.classList.contains("active")) {
+                const selectEl = document.getElementById('weatherRegionSelect');
+                if (selectEl) loadWeatherData(selectEl.value);
+                loadEarthquakeData();
+                loadVolcanoData();
+            }
+        }, 10000);
 
         let allThreadData = {}; 
 
@@ -1746,7 +1865,7 @@
                             <div style="margin: 4px 0 4px 10px; white-space: pre-wrap; word-break: break-all; font-size:13px; color:#000;">${post.text}</div>
                             <div style="text-align: right; margin-top:3px;">
                                 <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${boardId}" data-thread="${threadId}" data-post="${post.id}" data-logkey="" data-is-thread="false" style="font-size:10px; color:red; font-weight:bold; cursor:pointer; padding:1px 5px;">🗑️ 削除</button>
-                                <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${post.uid || ''}" style="font-size:10px; color:orange; font-weight:bold; cursor:pointer; padding:1px 5px; margin-left:5px;">⚠️ 警告</button>
+                                <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${post.uid || ''}" style="font-size:10px; color:orange; font-weight:bold; cursor:padding:1px 5px; margin-left:5px;">⚠️ 警告</button>
                             </div>
                         `;
                         adminPostListArea.appendChild(div);
