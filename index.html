@@ -161,23 +161,23 @@
         /* 検索エリアの親要素 */
         .search-container {
           display: flex;
-          gap: 8px; /* 入力欄とボタンの間隔 */
+          gap: 8px;
           width: 100%;
           box-sizing: border-box;
         }
 
         /* テキスト入力欄 */
         .search-container input[type="text"] {
-          flex: 1;          /* 空きスペースいっぱいに広げる */
-          min-width: 0;     /* Flexbox内で潰れるのを防ぐ（超重要！） */
+          flex: 1;
+          min-width: 0;
           padding: 8px;
-          font-size: 16px;  /* iPhoneでタップした時に勝手にズームされるのを防ぐ */
+          font-size: 16px;
         }
 
         /* 検索ボタン */
         .search-container input[type="submit"],
         .search-container button {
-          white-space: nowrap; /* ボタンの文字が途中で改行されるのを防ぐ */
+          white-space: nowrap;
           padding: 8px 16px;
         }
 
@@ -239,11 +239,7 @@
         @media (max-width: 768px) {
             body { margin: 4px; font-size: 14px; }
             
-            /* ナビゲーションバーのモバイルレイアウト */
-            .nav-text {
-                font-size: 12px;
-                padding: 6px;
-            }
+            .nav-text { font-size: 12px; padding: 6px; }
             .nav-right-area {
                 width: 100%;
                 justify-content: flex-start;
@@ -256,7 +252,6 @@
             .sub-title { font-size: 11px; margin-bottom: 10px; }
             .split-container { flex-direction: column; gap: 8px; margin-top: 8px; }
             
-            /* サイドバーのタッチ・スクロール快適化 */
             .sidebar-box { 
                 width: 100%; 
                 position: static; 
@@ -273,14 +268,12 @@
             .main-content-box { width: 100%; }
             .post-dd { margin-left: 6px; margin-top: 2px; font-size: 15px; }
             
-            /* スレッド表示領域 */
             .posts-box { 
                 max-height: 55vh; 
                 padding: 6px;
                 -webkit-overflow-scrolling: touch;
             }
             
-            /* iOS Safariでの入力時自動ズームを防止 (16px化) */
             .form-container { width: 100%; max-width: 100%; padding: 8px; }
             .form-row label { display: block; width: 100%; margin-bottom: 2px; font-size: 12px; }
             .form-row input[type="text"], 
@@ -294,7 +287,6 @@
                 padding: 6px; 
             }
             
-            /* スマホで押しやすい大ボタン */
             .btn-submit { 
                 width: 100%; 
                 padding: 10px; 
@@ -303,21 +295,14 @@
                 min-height: 40px;
             }
             
-            .dark-mode-btn {
-                padding: 3px 8px;
-                font-size: 12px;
-            }
+            .dark-mode-btn { padding: 3px 8px; font-size: 12px; }
 
-            /* 管理者画面のスマホ最適化 */
             #adminView > div[style*="display: flex"] { flex-direction: column !important; gap: 8px !important; }
             #adminLogArea { height: 40vh !important; }
             #adminAlertArea, #adminUserList { height: 22vh !important; }
             .admin-delete-btn, .admin-warn-btn { padding: 6px 10px !important; font-size: 12px !important; margin: 3px 2px !important; display: inline-block; }
             
-            /* レスプレビューの横幅調整 */
             #res-preview-popup { max-width: 90vw; }
-            
-            /* モーダルのフィット感 */
             .terms-card, .report-card { width: 96%; padding: 10px; max-height: 92vh; }
         }
 
@@ -641,6 +626,18 @@
         </div>
     </div>
 
+    <!-- レスプレビューのポップアップ要素 -->
+    <div id="res-preview-popup">
+        <div class="rp-dt" id="rp-dt-content"></div>
+        <div class="rp-dd" id="rp-dd-content"></div>
+    </div>
+
+    <!-- ライトボックス要素 -->
+    <div id="lightbox">
+        <span id="lightbox-close">&times;</span>
+        <img id="lightbox-img" src="" alt="拡大画像">
+    </div>
+
     <!-- Supabase JS Client v2 の読み込み -->
     <script type="module">
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -651,7 +648,7 @@
             termsModal.style.display = "none";
         });
 
-        // ⚡ Supabase設定（修正済みのAPIキーを適用）
+        // ⚡ Supabase設定
         const SUPABASE_URL = "https://yeotqaorheaxjppylfgg.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inllb3RxYW9yaGVheGpwcHlsZmdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MzA1NzMsImV4cCI6MjEwMTUwNjU3M30.GqbadI7MCM3h6xT9Ro-OJVzjgjmVip9vn5G6iA9KxoM";
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -682,7 +679,8 @@
                 'ﾀﾞ':'だ','ﾁﾞ':'ぢ','ﾂﾞ':'づ','ﾃﾞ':'で','ﾄﾞ':'ど','ﾊﾞ':'ば','ﾋﾞ':'び','ﾌﾞ':'ぶ','ﾍﾞ':'べ','ﾎﾞ':'ぼ',
                 'ﾊﾟ':'ぱ','ﾋﾟ':'ぴ','ﾌﾟ':'ぷ','ﾍﾟ':'ぺ','ﾎﾟ':'ぽ','ｯ':'っ','ｬ':'ゃ','ｭ':'ゅ','ｮ':'ょ'
             };
-            for (let k in halfKanaMap) text = text.split(k).join(halfKanaMap[k]);
+            const kanaKeys = Object.keys(halfKanaMap).sort((a, b) => b.length - a.length);
+            for (let k of kanaKeys) text = text.split(k).join(halfKanaMap[k]);
             return text;
         }
 
@@ -729,7 +727,7 @@
             "■ 芸能・音楽・映画": { "idol": "地下アイドル", "akb": "AKB48", "smap": "ジャニーズ", "m芸能": "芸能人・有名人", "music": "邦楽", "musicg": "洋楽", "cinema": "映画一般", "visual": "ヴィジュアル系", "drama": "テレビドラマ" },
             "■ 学問・理数・人文": { "history": "日本史", "whistory": "世界史", "physics": "物理", "math": "数学", "psy": "心理学", "gengo": "言語学", "philosophy": "哲学", "keizai": "経済学", "space": "宇宙・天文学" },
             "■ 生活・家庭・美容": { "cook": "料理・レシピ", "kankon": "冠婚葬祭", "baby": "育児・子育て", "kaden": "家電製品", "interior": "インテリア", "diet": "ダイエット", "mensbeauty": "メンズ美容", "fashion": "洋服・ファッション" },
-            "■ 人生・メンタル・コミュニティ": { "lonely": "ぼっち・馴れ合い", "mental": "メンタルヘルス", "meikyu": "人生相談", "debt": "借金・生活苦", "job": "転職・就職", "part": "アルバイト", "shikaku": "資格全全", "jinsei": "生き方・人生" },
+            "■ 人生・メンタル・コミュニティ": { "lonely": "ぼっち・馴れ合い", "mental": "メンタルヘルス", "meikyu": "人生相談", "debt": "借金・生活苦", "job": "転職・就職", "part": "アルバイト", "shikaku": "資格全般", "jinsei": "生き方・人生" },
             "■ 各地・地域ローカル": { 
                 "hokkaido": "北海道", "tohoku": "東北", "miyagi": "宮城", "kanto": "関東", "tokyo": "東京", "kanagawa": "神奈川", "chiba": "千葉", 
                 "koshinetsu": "甲信越", "niigata": "新潟", "tokai": "東海", "shizuoka": "静岡", "aichi": "愛知県", "kinki": "近畿", "osaka": "大阪", 
@@ -774,6 +772,25 @@
         let currentThreadId = null;
         let currentThreadChannel = null;
         let currentPostChannel = null;
+
+        function getTodayID() {
+            let userKey = localStorage.getItem("bbs_user_secret_key");
+            if (!userKey) {
+                userKey = Math.random().toString(36).substring(2, 10);
+                localStorage.setItem("bbs_user_secret_key", userKey);
+            }
+            const now = new Date();
+            const mix = userKey + `${now.getFullYear()}${now.getMonth()+1}${now.getDate()}`;
+            let hash = 0;
+            for (let i = 0; i < mix.length; i++) { hash = (hash << 5) - hash + mix.charCodeAt(i); hash |= 0; }
+            return Math.abs(hash).toString(36).substring(0, 8).toUpperCase();
+        }
+
+        function getNowString() {
+            const now = new Date();
+            const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+            return `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')}(${weekdays[now.getDay()]}) ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+        }
 
         const myUid = getTodayID();
         const presenceChannel = supabase.channel('online-users');
@@ -878,25 +895,6 @@
         postNameInput.addEventListener("input", (e) => saveName(e.target.value));
         checkNameLock();
 
-        function getTodayID() {
-            let userKey = localStorage.getItem("bbs_user_secret_key");
-            if (!userKey) {
-                userKey = Math.random().toString(36).substring(2, 10);
-                localStorage.setItem("bbs_user_secret_key", userKey);
-            }
-            const now = new Date();
-            const mix = userKey + `${now.getFullYear()}${now.getMonth()+1}${now.getDate()}`;
-            let hash = 0;
-            for (let i = 0; i < mix.length; i++) { hash = (hash << 5) - hash + mix.charCodeAt(i); hash |= 0; }
-            return Math.abs(hash).toString(36).substring(0, 8).toUpperCase();
-        }
-
-        function getNowString() {
-            const now = new Date();
-            const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-            return `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')}(${weekdays[now.getDay()]}) ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-        }
-
         function renderBbsMenu() {
             bbsMenuArea.innerHTML = "";
             for (let categoryName in BOARD_DATA) {
@@ -919,6 +917,8 @@
                 bbsMenuArea.appendChild(linksWrapper);
             }
         }
+
+        renderBbsMenu();
 
         function hideAllViews() {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
@@ -1432,7 +1432,10 @@
 
             const newThreadId = threadData.id;
             const { data: postData, error: postErr } = await supabase.from('posts').insert([{ thread_id: newThreadId, name: name, text: firstMsg, time: timeStr, uid: userId, image_data: imgData }]).select().single();
-            if (postErr) return alert("投稿作成エラー: " + postErr.message);
+            if (postErr) {
+                await supabase.from('threads').delete().eq('id', newThreadId);
+                return alert("投稿作成エラー: " + postErr.message);
+            }
 
             await supabase.from('global_logs').insert([{
                 board_id: currentBoardId, board_name: ALL_BOARDS[currentBoardId], thread_id: newThreadId,
@@ -1485,21 +1488,65 @@
         let lastPostsByUid = {}; 
         let adminListeners = []; 
 
-        navAdminBtn.addEventListener("click", () => {
-            if (!isAdminAuthenticated) {
-                const pass = prompt("管理者パスワードを入力してください：");
-                if (pass === "hagekasuisibasi427") {
+        async function authenticateAdmin() {
+            // 既存のSupabase Authセッションがあれば再利用
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const { data: adminRecord, error: adminError } = await supabase
+                    .from('admin_users')
+                    .select('user_id')
+                    .eq('user_id', session.user.id)
+                    .maybeSingle();
+
+                if (!adminError && adminRecord) {
                     isAdminAuthenticated = true;
-                    alert("認証成功。管理者監視ロビーを開きます。");
-                } else {
-                    alert("パスワードが間違っています。");
-                    return;
+                    return true;
                 }
+            }
+
+            const email = prompt("管理者メールアドレスを入力してください：");
+            if (!email) return false;
+
+            const password = prompt("管理者パスワードを入力してください：");
+            if (!password) return false;
+
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password
+            });
+
+            if (authError || !authData.user) {
+                alert("管理者認証に失敗しました。メールアドレスまたはパスワードを確認してください。");
+                return false;
+            }
+
+            const { data: adminRecord, error: adminError } = await supabase
+                .from('admin_users')
+                .select('user_id')
+                .eq('user_id', authData.user.id)
+                .maybeSingle();
+
+            if (adminError || !adminRecord) {
+                await supabase.auth.signOut();
+                alert("このアカウントには管理者権限がありません。");
+                return false;
+            }
+
+            isAdminAuthenticated = true;
+            alert("認証成功。管理者監視ロビーを開きます。");
+            return true;
+        }
+
+        navAdminBtn.addEventListener("click", async () => {
+            if (!isAdminAuthenticated) {
+                const authenticated = await authenticateAdmin();
+                if (!authenticated) return;
             }
             hideAllViews();
             adminView.classList.add("active");
             currentLocationDisplay.textContent = "管理者専用部屋";
             startAdminMonitor();
+            initAdminBrowser();
         });
 
         function playWarningSound() {
@@ -1551,8 +1598,8 @@
             if (isThread) {
                 if (confirm("【⚠️警告⚠️】\n本当にこのスレッドを『丸ごと削除』しますか？")) {
                     if (threadId) {
-                        await supabase.from('threads').delete().eq('id', threadId);
                         await supabase.from('posts').delete().eq('thread_id', threadId);
+                        await supabase.from('threads').delete().eq('id', threadId);
                         await supabase.from('global_logs').delete().eq('thread_id', threadId);
                         alert("スレッドを丸ごと完全削除しました。");
                         const adminPostListArea = document.getElementById("adminPostListArea");
@@ -1561,7 +1608,15 @@
                 }
             } else {
                 if (confirm("本当にこのメッセージを削除しますか？")) {
-                    if (postKey) await supabase.from('posts').delete().eq('id', postKey);
+                    if (postKey) {
+                        const { data: deletedPost } = await supabase.from('posts').select('thread_id').eq('id', postKey).single();
+                        await supabase.from('posts').delete().eq('id', postKey);
+                        if (deletedPost?.thread_id) {
+                            const { data: threadData } = await supabase.from('threads').select('reply_count').eq('id', deletedPost.thread_id).single();
+                            const nextCount = Math.max(0, (threadData?.reply_count || 0) - 1);
+                            await supabase.from('threads').update({ reply_count: nextCount }).eq('id', deletedPost.thread_id);
+                        }
+                    }
                     if (logKey) await supabase.from('global_logs').delete().eq('id', logKey);
                     alert("該当のメッセージを削除しました。");
                 }
@@ -1648,7 +1703,7 @@
                 .subscribe();
             adminListeners.push(adminReportChannel);
 
-            const processLog = (log, logKey) => {
+            const processLog = async (log, logKey) => {
                 if (adminLogArea.innerHTML.includes("リアルタイムログの読み込みを開始しました...")) adminLogArea.innerHTML = "";
 
                 if (log.type === "問題報告") {
@@ -1690,8 +1745,17 @@
                     if (adminAlertArea.innerHTML.includes("アラート履歴はありません")) adminAlertArea.innerHTML = "";
                     if (!document.getElementById(`admin-alert-ng-${uniqueId}`)) {
                         if (window.autoNgMode && isRecentLog) {
-                            if (log.thread_id && log.post_key) supabase.from('posts').delete().eq('id', log.post_key);
-                            if (logKey) supabase.from('global_logs').delete().eq('id', logKey);
+                            if (log.thread_id && log.post_key) {
+                                await supabase.from('posts').delete().eq('id', log.post_key);
+                                if (isThreadType) {
+                                    await supabase.from('threads').delete().eq('id', log.thread_id);
+                                } else {
+                                    const { data: threadData } = await supabase.from('threads').select('reply_count').eq('id', log.thread_id).single();
+                                    const nextCount = Math.max(0, (threadData?.reply_count || 0) - 1);
+                                    await supabase.from('threads').update({ reply_count: nextCount }).eq('id', log.thread_id);
+                                }
+                            }
+                            if (logKey) await supabase.from('global_logs').delete().eq('id', logKey);
                             if (log.uid) supabase.from('warnings').insert([{ target_uid: log.uid, message: "NGワードを含む書き込みが自動検出・削除されました。", timestamp: Date.now() }]);
                             
                             const alertDiv = document.createElement("div");
@@ -1704,7 +1768,7 @@
                                 <b>内容:</b> <span style="color:#b30000;">${log.text}</span><br>
                                 <span style="color:#008000; font-size:11px;">🗑️ 自動削除済み ／ ⚠️ 警告送信済み</span>
                             `;
-                            adminAlertArea.insertBefore(alertDiv, adminAlertArea.firstChild);
+                            adminAlertArea.insertBefore(alertDiv, alertDiv.firstChild);
                         } else {
                             const alertDiv = document.createElement("div");
                             alertDiv.id = `admin-alert-ng-${uniqueId}`;
@@ -1719,7 +1783,7 @@
                                     <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${log.uid}" style="color:orange; font-weight:bold; cursor:pointer; font-size:11px; margin-left:10px;">⚠️ 送信者へ警告</button>
                                 </div>
                             `;
-                            adminAlertArea.insertBefore(alertDiv, adminAlertArea.firstChild);
+                            adminAlertArea.insertBefore(alertDiv, alertDiv.firstChild);
                         }
                         if (isRecentLog) playWarningSound();
                     }
@@ -1801,101 +1865,104 @@
                     return;
                 }
 
-                adminThreadListArea.innerHTML = "<div style='color:#666;'>スレッドを読み込み中...</div>";
+                adminThreadListArea.innerHTML = "<div style='color:#666; font-style:italic;'>読み込み中...</div>";
 
                 const fetchAdminThreads = async () => {
-                    let { data } = await supabase.from('threads').select('*').eq('board_id', boardId).order('created_at', { ascending: false });
-                    if (!data) {
+                    let { data, error } = await supabase.from('threads').select('*').eq('board_id', boardId).order('created_at', { ascending: false });
+                    if (error) {
                         const fallback = await supabase.from('threads').select('*').eq('board_id', boardId).order('id', { ascending: false });
                         data = fallback.data;
                     }
 
                     adminThreadListArea.innerHTML = "";
-                    if (data && data.length > 0) {
-                        let index = 1;
-                        data.forEach(thread => {
-                            const div = document.createElement("div");
-                            div.style.cssText = "padding:4px 5px; border-bottom:1px dashed #ccc; cursor:pointer;";
-                            div.innerHTML = `<a style="font-weight:bold;">${index}: ${thread.title}</a>`;
-                            div.addEventListener("click", () => loadAdminPosts(boardId, thread.id, thread.title));
-                            adminThreadListArea.appendChild(div);
-                            index++;
-                        });
-                    } else {
-                        adminThreadListArea.innerHTML = "<div style='color:#666;'>スレッドがありません。</div>";
+                    if (!data || data.length === 0) {
+                        adminThreadListArea.innerHTML = "<div style='color:#666; font-style:italic;'>スレッドが存在しません。</div>";
+                        return;
                     }
+
+                    data.forEach(t => {
+                        const item = document.createElement("div");
+                        item.style.cssText = "padding:4px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;";
+                        
+                        const titleSpan = document.createElement("span");
+                        titleSpan.style.cssText = "cursor:pointer; color:#0000ff; text-decoration:underline; word-break:break-all;";
+                        titleSpan.textContent = `${t.title} (${t.reply_count || 1}res)`;
+                        titleSpan.onclick = () => loadAdminPosts(t.id, t.title);
+
+                        const delBtn = document.createElement("button");
+                        delBtn.className = "btn-submit";
+                        delBtn.style.cssText = "font-size:10px; color:red; padding:1px 4px; margin-left:6px; flex-shrink:0;";
+                        delBtn.textContent = "🗑️ 削除";
+                        delBtn.onclick = async () => {
+                            if (confirm(`スレッド「${t.title}」を丸ごと削除しますか？`)) {
+                                await supabase.from('posts').delete().eq('thread_id', t.id);
+                                await supabase.from('threads').delete().eq('id', t.id);
+                                await supabase.from('global_logs').delete().eq('thread_id', t.id);
+                                alert("スレッドを削除しました。");
+                                fetchAdminThreads();
+                                adminPostListArea.innerHTML = "<div style='color:#666; font-style:italic;'>スレッドを選択するとメッセージ一覧が表示されます。</div>";
+                            }
+                        };
+
+                        item.appendChild(titleSpan);
+                        item.appendChild(delBtn);
+                        adminThreadListArea.appendChild(item);
+                    });
                 };
 
                 await fetchAdminThreads();
+
                 currentAdminThreadChannel = supabase.channel(`admin-threads-${boardId}`)
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'threads', filter: `board_id=eq.${boardId}` }, fetchAdminThreads)
                     .subscribe();
             });
         }
 
-        async function loadAdminPosts(boardId, threadId, threadTitle) {
+        async function loadAdminPosts(threadId, threadTitle) {
             const adminPostListArea = document.getElementById("adminPostListArea");
-            if (currentAdminPostChannel) supabase.removeChannel(currentAdminPostChannel);
+            if (!adminPostListArea) return;
 
-            adminPostListArea.innerHTML = "<div style='color:#666;'>全メッセージを取得中...</div>";
+            if (currentAdminPostChannel) supabase.removeChannel(currentAdminPostChannel);
+            adminPostListArea.innerHTML = "<div style='color:#666; font-style:italic;'>読み込み中...</div>";
 
             const fetchAdminPosts = async () => {
-                let { data } = await supabase.from('posts').select('*').eq('thread_id', threadId).order('created_at', { ascending: true });
-                if (!data) {
+                let { data, error } = await supabase.from('posts').select('*').eq('thread_id', threadId).order('created_at', { ascending: true });
+                if (error) {
                     const fallback = await supabase.from('posts').select('*').eq('thread_id', threadId).order('id', { ascending: true });
                     data = fallback.data;
                 }
 
-                adminPostListArea.innerHTML = "";
-                
-                const titleDiv = document.createElement("div");
-                titleDiv.style.cssText = "font-weight:bold; color:#ff0000; margin-bottom:8px; border-bottom:2px solid #ff0000; padding-bottom:5px;";
-                titleDiv.innerHTML = `📌 スレ: ${threadTitle} <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${boardId}" data-thread="${threadId}" data-post="" data-logkey="" data-is-thread="true" style="font-size:11px; color:#fff; background-color:#ff0000; border:1px solid #cc0000; font-weight:bold; cursor:pointer; margin-left:15px; padding:2px 6px;">🗑️ このスレを丸ごと削除</button>`;
-                adminPostListArea.appendChild(titleDiv);
-
-                if (data && data.length > 0) {
-                    let count = 1;
-                    data.forEach(post => {
-                        const div = document.createElement("div");
-                        div.style.cssText = "margin-bottom:8px; padding:6px; background:#fafaf0; border:1px solid #ccc;";
-                        div.innerHTML = `
-                            <div style="font-size:12px; color:#000;">
-                                <b>${count}</b> ：<b><span style="color:#008000;">${post.name}</span></b> ：${post.time} <span style="color:#666;font-family:monospace;">ID:${post.uid || '???'}</span>
-                            </div>
-                            <div style="margin: 4px 0 4px 10px; white-space: pre-wrap; word-break: break-all; font-size:13px; color:#000;">${post.text}</div>
-                            <div style="text-align: right; margin-top:3px;">
-                                <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-board="${boardId}" data-thread="${threadId}" data-post="${post.id}" data-logkey="" data-is-thread="false" style="font-size:10px; color:red; font-weight:bold; cursor:pointer; padding:1px 5px;">🗑️ 削除</button>
-                                <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${post.uid || ''}" style="font-size:10px; color:orange; font-weight:bold; cursor:padding:1px 5px; margin-left:5px;">⚠️ 警告</button>
-                            </div>
-                        `;
-                        adminPostListArea.appendChild(div);
-                        count++;
-                    });
-                } else {
-                    adminPostListArea.innerHTML += "<div style='color:#666;'>書き込みメッセージはありません。</div>";
+                adminPostListArea.innerHTML = `<div style="font-weight:bold; margin-bottom:6px; color:#000080; border-bottom:1px solid #ccc; padding-bottom:3px;">📌 スレッド: ${threadTitle}</div>`;
+                if (!data || data.length === 0) {
+                    adminPostListArea.innerHTML += "<div style='color:#666; font-style:italic;'>メッセージがありません。</div>";
+                    return;
                 }
+
+                data.forEach((p, idx) => {
+                    const pDiv = document.createElement("div");
+                    pDiv.style.cssText = "padding:6px; border-bottom:1px solid #eee; background:#fafafa; margin-bottom:4px;";
+                    pDiv.innerHTML = `
+                        <div style="font-size:11px; color:#333;">
+                            <b>${idx + 1}</b> ：<b>${p.name || '名無し'}</b> ：${p.time || ''} <span style="font-family:monospace; font-weight:bold;">ID:${p.uid || '???'}</span>
+                        </div>
+                        <div style="font-size:12px; margin:4px 0; white-space:pre-wrap; word-break:break-all;">${p.text || ''}</div>
+                        ${p.image_data ? `<div style="font-size:11px; color:#666;">🖼️ [画像あり]</div>` : ''}
+                        <div style="margin-top:4px; text-align:right;">
+                            ${p.image_data ? `<button class="admin-delete-img-btn" onclick="window.adminDeleteImageHandler(this)" data-post="${p.id}" style="font-size:10px; color:#c05000; cursor:pointer; margin-right:4px;">🖼️ 画像削除</button>` : ''}
+                            <button class="admin-delete-btn" onclick="window.adminDeleteHandler(this)" data-thread="${threadId}" data-post="${p.id}" data-is-thread="false" style="font-size:10px; color:red; cursor:pointer;">🗑️ メッセージ削除</button>
+                            <button class="admin-warn-btn" onclick="window.adminWarnHandler(this)" data-uid="${p.uid}" style="font-size:10px; color:orange; cursor:pointer; margin-left:4px;">⚠️ 警告送信</button>
+                        </div>
+                    `;
+                    adminPostListArea.appendChild(pDiv);
+                });
             };
 
             await fetchAdminPosts();
+
             currentAdminPostChannel = supabase.channel(`admin-posts-${threadId}`)
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'posts', filter: `thread_id=eq.${threadId}` }, fetchAdminPosts)
                 .subscribe();
         }
-
-        initAdminBrowser();
-        renderBbsMenu();
     </script>
-
-    <!-- 💬 レスプレビューポップアップ -->
-    <div id="res-preview-popup">
-        <div class="rp-dt" id="rp-dt-content"></div>
-        <div class="rp-dd" id="rp-dd-content"></div>
-    </div>
-
-    <!-- 🔍 ライトボックス -->
-    <div id="lightbox">
-        <span id="lightbox-close">✕</span>
-        <img id="lightbox-img" src="" alt="拡大画像">
-    </div>
 </body>
 </html>
