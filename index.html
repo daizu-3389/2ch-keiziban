@@ -339,6 +339,99 @@
         body.dark #dictResultArea { background: #000 !important; border-color: #555 !important; color: #00ff00 !important; }
         .dark-mode-btn { background: #d4d0c8; color: #000; border: 2px outset #ffffff; font-size: 11px; padding: 1px 5px; cursor: pointer; margin-left: 6px; vertical-align: middle; border-radius: 0; font-family: "MS PGothic", sans-serif; }
         body.dark .dark-mode-btn { background: #333; color: #ffff00; border-color: #666; }
+
+        /* 🖥️ 平成中期の2ch風を意識した外観（レイアウト・機能は変更しない） */
+        body {
+            background: #f3f3f3;
+            color: #111;
+            font-family: Arial, "MS PGothic", "ＭＳ Ｐゴシック", sans-serif;
+            font-size: 13px;
+        }
+        .nav-text, .sidebar-box, .form-container, .terms-card, .report-card, .thread-list-box {
+            border: 1px solid #b8b8b8;
+            box-shadow: none;
+        }
+        .nav-text { background:#e8e8e8; padding:3px 6px; margin-bottom:8px; }
+        .sidebar-box { background:#e7e7e7; padding:5px; }
+        .sidebar-box .cat-title { background:#d8d8d8; color:#003399; border-bottom:1px solid #aaa; }
+        h1.site-title { font-family: Arial, "MS PGothic", sans-serif; font-size:24px; text-shadow:none; margin:3px 0 0; }
+        .sub-title { font-size:12px; margin-bottom:10px; }
+        .board-title, .thread-header-title { font-size:18px; border-bottom:1px solid #cc0000; }
+        .thread-list-box { background:#fff; padding:6px; }
+        .thread-line { font-size:13px; margin-bottom:2px; }
+        .posts-box { background:#fff; border:1px solid #aaa; padding:8px; }
+        .post-dt { font-size:13px; }
+        .post-dd { margin-left:16px; font-size:14px; font-family: Arial, "MS PGothic", "ＭＳ Ｐゴシック", sans-serif; }
+        .form-container { background:#e9e9e9; padding:6px; }
+        .form-container h3 { background:#d8d8d8; color:#003399; border-bottom:1px solid #aaa; padding:2px 4px; }
+        .btn-submit { background:#eee; border:1px solid #999; padding:2px 10px; }
+        .btn-submit:hover { background:#fff; }
+        .thread-search-box, .form-row input[type="text"], .form-row textarea { border:1px solid #999; }
+
+        /* 🌙 ダークモードをページ全体へ適用 */
+        body.dark { background:#111 !important; color:#e7e7e7 !important; }
+        body.dark .main-container, body.dark .main-content-box { color:#e7e7e7 !important; }
+        body.dark .nav-text,
+        body.dark .sidebar-box,
+        body.dark .thread-list-box,
+        body.dark .posts-box,
+        body.dark .form-container,
+        body.dark .report-card,
+        body.dark .terms-card { background:#1b1b1b !important; color:#e7e7e7 !important; border-color:#4a4a4a !important; }
+        body.dark .sidebar-box .cat-title,
+        body.dark .form-container h3 { background:#262626 !important; color:#66aaff !important; border-color:#4a4a4a !important; }
+        body.dark .board-title,
+        body.dark .thread-header-title { color:#ff6b6b !important; border-color:#7a3333 !important; }
+        body.dark .thread-line,
+        body.dark .post-dt,
+        body.dark .post-dd,
+        body.dark .post-id,
+        body.dark .sub-title,
+        body.dark .res-count,
+        body.dark .form-row label,
+        body.dark .report-card,
+        body.dark #adminLogArea,
+        body.dark #adminAlertArea,
+        body.dark #adminUserList,
+        body.dark #adminReportArea,
+        body.dark #adminThreadListArea,
+        body.dark #adminPostListArea { color:#e7e7e7 !important; }
+        body.dark .form-row input[type="text"],
+        body.dark .form-row textarea,
+        body.dark .thread-search-box,
+        body.dark #weatherRegionSelect,
+        body.dark #dictKeywordInput,
+        body.dark #dictResultArea,
+        body.dark #adminLogArea,
+        body.dark #adminAlertArea,
+        body.dark #adminUserList,
+        body.dark #adminReportArea,
+        body.dark #adminThreadListArea,
+        body.dark #adminPostListArea { background:#101010 !important; color:#e7e7e7 !important; border-color:#555 !important; }
+        body.dark .btn-submit,
+        body.dark .dark-mode-btn,
+        body.dark .img-toggle-btn { background:#292929 !important; color:#e7e7e7 !important; border-color:#666 !important; }
+        body.dark .btn-submit:hover,
+        body.dark .img-toggle-btn:hover { background:#3a3a3a !important; }
+        body.dark .post-group { border-color:#3a3a3a !important; }
+        body.dark .post-group:target { background:#2b2b1a !important; }
+        body.dark #res-preview-popup { background:#171717 !important; color:#e7e7e7 !important; border-color:#666 !important; }
+        body.dark #res-preview-popup .rp-dt,
+        body.dark #res-preview-popup .rp-dd { color:#e7e7e7 !important; border-color:#444 !important; }
+        body.dark .terms-subtext { color:#e7e7e7 !important; }
+        body.dark .terms-body { background:#101010 !important; color:#ddd !important; border-color:#555 !important; }
+        body.dark .terms-body h3 { color:#ff7777 !important; border-color:#734040 !important; }
+        body.dark #adminView [style*="background: #fff"],
+        body.dark #adminView [style*="background:#fff"],
+        body.dark #adminView [style*="background: #fafafa"],
+        body.dark #adminView [style*="background:#fafafa"] { background:#151515 !important; color:#e7e7e7 !important; border-color:#444 !important; }
+        body.dark #adminView [style*="color:#333"],
+        body.dark #adminView [style*="color: #333"] { color:#d0d0d0 !important; }
+        body.dark #adminView [style*="color:#666"],
+        body.dark #adminView [style*="color: #666"] { color:#aaa !important; }
+        body.dark a { color:#66b3ff; }
+        body.dark a:visited { color:#b08cff; }
+        body.dark a:hover { color:#fff; background:#333; }
     </style>
 </head>
 <body>
@@ -644,7 +737,12 @@
 
         // 📜 利用規約同意チェック
         const termsModal = document.getElementById("termsModal");
+        const TERMS_STORAGE_KEY = "bbs_terms_agreed_v1";
+        if (localStorage.getItem(TERMS_STORAGE_KEY) === "1") {
+            termsModal.style.display = "none";
+        }
         document.getElementById("agreeTermsBtn").addEventListener("click", () => {
+            localStorage.setItem(TERMS_STORAGE_KEY, "1");
             termsModal.style.display = "none";
         });
 
@@ -924,12 +1022,66 @@
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         }
 
+        const NAV_STATE_KEY = "bbs_navigation_state_v1";
+        const DRAFT_STATE_KEY = "bbs_draft_state_v1";
+
+        function saveNavigationState(view, boardId = currentBoardId, threadId = currentThreadId, threadTitle = currentThreadTitle?.textContent || "") {
+            try {
+                sessionStorage.setItem(NAV_STATE_KEY, JSON.stringify({ view, boardId, threadId, threadTitle }));
+            } catch (e) {}
+        }
+
+        function saveDraftState() {
+            try {
+                sessionStorage.setItem(DRAFT_STATE_KEY, JSON.stringify({
+                    threadTitle: newThreadTitleInput.value,
+                    threadCreatorName: threadCreatorNameInput.value,
+                    threadFirstMessage: threadFirstMessageInput.value,
+                    postName: postNameInput.value,
+                    postMessage: postMessageInput.value
+                }));
+            } catch (e) {}
+        }
+
+        function restoreDraftState() {
+            try {
+                const draft = JSON.parse(sessionStorage.getItem(DRAFT_STATE_KEY) || "null");
+                if (!draft) return;
+                newThreadTitleInput.value = draft.threadTitle || "";
+                threadCreatorNameInput.value = draft.threadCreatorName || "";
+                threadFirstMessageInput.value = draft.threadFirstMessage || "";
+                postNameInput.value = draft.postName || "";
+                postMessageInput.value = draft.postMessage || "";
+            } catch (e) {}
+        }
+
+        async function restoreNavigationState() {
+            restoreDraftState();
+            try {
+                const state = JSON.parse(sessionStorage.getItem(NAV_STATE_KEY) || "null");
+                if (!state) return;
+                if (state.view === "thread" && state.boardId && state.threadId) {
+                    currentBoardId = state.boardId;
+                    await openThread(state.threadId, state.threadTitle || "スレッド");
+                    return;
+                }
+                if (state.view === "board" && state.boardId) {
+                    switchBoard(state.boardId);
+                }
+            } catch (e) {}
+        }
+
+        [newThreadTitleInput, threadCreatorNameInput, threadFirstMessageInput, postNameInput, postMessageInput].forEach(el => {
+            el.addEventListener("input", saveDraftState);
+        });
+
         function switchBoard(boardId) {
             currentBoardId = boardId;
             currentLocationDisplay.textContent = ALL_BOARDS[boardId];
             currentBoardTitleDisplay.textContent = `📂 ${ALL_BOARDS[boardId]} のスレッド一覧`;
             hideAllViews();
             threadListView.classList.add("active");
+            saveNavigationState("board", boardId, null, "");
             loadThreadList(boardId);
         }
 
@@ -940,6 +1092,7 @@
             currentLocationDisplay.textContent = "トップページ";
             hideAllViews();
             welcomeView.classList.add("active");
+            sessionStorage.removeItem(NAV_STATE_KEY);
         });
 
         // 💬 ご意見・お問い合わせモーダル処理
@@ -1341,6 +1494,7 @@
             currentLocationDisplay.textContent = threadTitle;
             hideAllViews();
             threadDetailView.classList.add("active");
+            saveNavigationState("thread", currentBoardId, threadId, threadTitle);
 
             if (currentPostChannel) supabase.removeChannel(currentPostChannel);
             postList.innerHTML = "<div style='color:#666; font-size:12px;'>読み込み中...</div>";
@@ -1410,6 +1564,7 @@
             currentLocationDisplay.textContent = ALL_BOARDS[currentBoardId];
             if (currentPostChannel) supabase.removeChannel(currentPostChannel);
             currentThreadId = null;
+            saveNavigationState("board", currentBoardId, null, "");
         });
 
         // ✨ スレッド新規作成
@@ -1448,6 +1603,7 @@
             newThreadTitleInput.value = "";
             threadFirstMessageInput.value = "";
             if (threadImgInput) threadImgInput.value = "";
+            saveDraftState();
             openThread(newThreadId, title);
         });
 
@@ -1481,6 +1637,7 @@
             updateLastPostTime();
             postMessageInput.value = "";
             if (postImgInput) postImgInput.value = "";
+            saveDraftState();
         });
 
         // 🛠️ 管理者部屋
@@ -1963,6 +2120,9 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'posts', filter: `thread_id=eq.${threadId}` }, fetchAdminPosts)
                 .subscribe();
         }
+        // 🔄 再読み込み後も最後に見ていた板・スレッドを復元
+        restoreNavigationState();
+
     </script>
 </body>
 </html>
