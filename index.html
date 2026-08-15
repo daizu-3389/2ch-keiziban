@@ -432,6 +432,38 @@
         body.dark a { color:#66b3ff; }
         body.dark a:visited { color:#b08cff; }
         body.dark a:hover { color:#fff; background:#333; }
+
+        /* 📰 カテゴリ別ニュース */
+        .news-toolbar { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:0 0 8px; }
+        .news-category-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+        .news-card { background:#fff; border:1px solid #aaa; padding:6px; min-width:0; }
+        .news-card-title { font-weight:bold; color:#003399; border-bottom:1px solid #bbb; padding-bottom:3px; margin-bottom:4px; }
+        .news-item { padding:5px 0; border-bottom:1px dotted #ccc; font-size:12px; line-height:1.4; }
+        .news-item:last-child { border-bottom:none; }
+        .news-item a { color:#0000cc; }
+        .news-time { color:#777; font-size:10px; display:block; margin-top:2px; }
+        .warning-none { color:#008000; font-weight:bold; }
+        .warning-item { padding:4px 6px; margin-bottom:4px; border-left:4px solid #f0a000; background:#fff8e6; }
+        .warning-item.warning-severe { border-left-color:#d00000; background:#fff0f0; }
+        .warning-item.warning-active { border-left-color:#e07b00; }
+        @media (max-width: 768px) {
+            .news-category-grid { grid-template-columns:1fr; gap:6px; }
+            .news-toolbar { align-items:stretch; flex-direction:column; }
+            .news-toolbar .btn-submit { width:100%; }
+            .news-card { padding:8px; }
+            #warningResultArea, #volcanoResultArea, #earthquakeResultArea, #weatherResultArea { font-size:12px !important; }
+        }
+
+        @media (max-width: 768px) {
+            #dictionaryView .form-container { padding: 8px !important; }
+            #dictionaryView .search-container { flex-direction:column; gap:6px; }
+            #dictionaryView .search-container input[type="text"],
+            #dictionaryView .search-container button { width:100%; min-width:0; }
+            #dictionaryView #dictQuickLinks { line-height:1.8; }
+            #dictionaryView #dictQuickLinks a { display:block; margin:3px 0 !important; padding:4px 6px; background:#f2f2f2; border:1px solid #bbb; }
+            #dictionaryView #dictResultArea { font-size:14px !important; padding:8px !important; overflow-wrap:anywhere; }
+            #dictionaryView #dictResultArea img { max-width:100% !important; height:auto !important; }
+        }
     </style>
 </head>
 <body>
@@ -554,6 +586,7 @@
                 <div class="cat-title">⏳ 外部情報</div>
                 <div class="board-links-area">
                     <a class="board-link" id="navWeatherBtn" style="font-weight:bold;">天気・地震・火山情報</a>
+                    <a class="board-link" id="navNewsBtn" style="font-weight:bold;">📰 カテゴリ別ニュース</a>
                     <a class="board-link" id="navDictBtn" style="font-weight:bold;">📖 辞書検索</a>
                 </div>
             </div>
@@ -639,6 +672,10 @@
                             <h3 style="color: #000080; border-bottom: 1px dashed #808080; margin: 0 0 8px 0; font-size: 14px;">🌋 噴火警報・火山情報</h3>
                             <div id="volcanoResultArea" style="font-size: 13px; line-height: 1.5; min-height: 100px;">火山活動情報を取得中...</div>
                         </div>
+                        <div class="thread-list-box" style="flex: 1 1 100%; min-width: 280px; padding: 10px; border: 1px solid #808080;">
+                            <h3 style="color: #000080; border-bottom: 1px dashed #808080; margin: 0 0 8px 0; font-size: 14px;">🚨 警報・注意報（選択地域）</h3>
+                            <div id="warningResultArea" style="font-size: 13px; line-height: 1.5; min-height: 80px;">警報・注意報を取得中...</div>
+                        </div>
                     </div>
                 </div>
 
@@ -661,6 +698,17 @@
                         <div id="dictResultArea" style="background: #fff; border: 2px inset #ffffff; padding: 10px; min-height: 120px; font-size: 13px; line-height: 1.5; margin-top: 8px;">
                             <span style="color: #666;">単語を入力して「検索」ボタンを押すと概要が表示され、各種外部辞書への直通リンクが生成されます。</span>
                         </div>
+                    </div>
+                </div>
+
+                <div id="newsView" class="view-section">
+                    <div class="board-title">📰 カテゴリ別ニュース</div>
+                    <div class="news-toolbar">
+                        <span style="font-size:12px; color:#666;">NHKニュースRSSをカテゴリ別に表示</span>
+                        <button class="btn-submit" id="newsRefreshBtn">↻ 更新</button>
+                    </div>
+                    <div id="newsCategoryArea" class="news-category-grid">
+                        <div class="news-card"><div class="news-card-title">読み込み中...</div><div class="news-items">ニュースを取得しています。</div></div>
                     </div>
                 </div>
 
@@ -851,6 +899,7 @@
         const navReportBtn = document.getElementById("navReportBtn");
         const navAdminBtn = document.getElementById("navAdminBtn");
         const navWeatherBtn = document.getElementById("navWeatherBtn");
+        const navNewsBtn = document.getElementById("navNewsBtn");
         const navDictBtn = document.getElementById("navDictBtn");
         const currentLocationDisplay = document.getElementById("currentLocationDisplay");
         const currentBoardTitleDisplay = document.getElementById("currentBoardTitleDisplay");
@@ -1168,6 +1217,63 @@
             alert(`【${category}】の内容を運営へ送信しました。ご協力ありがとうございます！`);
         });
 
+        // 📰 カテゴリ別ニュース
+        const newsView = document.getElementById("newsView");
+        const newsCategoryArea = document.getElementById("newsCategoryArea");
+        const newsRefreshBtn = document.getElementById("newsRefreshBtn");
+        const NEWS_FEEDS = [
+            { name: "総合", url: "https://www3.nhk.or.jp/rss/news/cat0.xml" },
+            { name: "社会", url: "https://www3.nhk.or.jp/rss/news/cat2.xml" },
+            { name: "政治", url: "https://www3.nhk.or.jp/rss/news/cat3.xml" },
+            { name: "経済", url: "https://www3.nhk.or.jp/rss/news/cat4.xml" },
+            { name: "国際", url: "https://www3.nhk.or.jp/rss/news/cat5.xml" },
+            { name: "スポーツ", url: "https://www3.nhk.or.jp/rss/news/cat6.xml" },
+            { name: "科学・文化", url: "https://www3.nhk.or.jp/rss/news/cat7.xml" }
+        ];
+
+        function escapeNewsHtml(value) {
+            return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        async function loadNewsFeed(feed) {
+            const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`;
+            const res = await fetch(proxyUrl);
+            if (!res.ok) throw new Error("ニュース取得失敗");
+            const data = await res.json();
+            return { ...feed, items: Array.isArray(data.items) ? data.items.slice(0, 5) : [] };
+        }
+
+        async function loadNewsData() {
+            if (!newsCategoryArea) return;
+            newsCategoryArea.innerHTML = NEWS_FEEDS.map(feed => `<div class="news-card"><div class="news-card-title">${escapeNewsHtml(feed.name)}</div><div class="news-items">読み込み中...</div></div>`).join("");
+            const results = await Promise.all(NEWS_FEEDS.map(async feed => {
+                try { return await loadNewsFeed(feed); } catch (e) { return { ...feed, items: null }; }
+            }));
+            newsCategoryArea.innerHTML = results.map(feed => {
+                if (feed.items === null) {
+                    return `<div class="news-card"><div class="news-card-title">${escapeNewsHtml(feed.name)}</div><div class="news-items" style="color:#c00;">取得できませんでした。</div></div>`;
+                }
+                if (!feed.items.length) {
+                    return `<div class="news-card"><div class="news-card-title">${escapeNewsHtml(feed.name)}</div><div class="news-items" style="color:#666;">現在ニュースがありません。</div></div>`;
+                }
+                const itemsHtml = feed.items.map(item => {
+                    const title = escapeNewsHtml(item.title || "無題");
+                    const link = item.link || "#";
+                    const date = item.pubDate ? new Date(item.pubDate).toLocaleString("ja-JP", { month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit" }) : "";
+                    return `<div class="news-item"><a href="${encodeURI(link)}" target="_blank" rel="noopener noreferrer">${title}</a>${date ? `<span class="news-time">${date}</span>` : ""}</div>`;
+                }).join("");
+                return `<div class="news-card"><div class="news-card-title">${escapeNewsHtml(feed.name)}</div><div class="news-items">${itemsHtml}</div></div>`;
+            }).join("");
+        }
+
+        navNewsBtn.addEventListener("click", () => {
+            hideAllViews();
+            newsView.classList.add("active");
+            currentLocationDisplay.textContent = "カテゴリ別ニュース";
+            loadNewsData();
+        });
+        newsRefreshBtn.addEventListener("click", loadNewsData);
+
         // 📖 辞書検索ビュー表示・検索処理
         const dictKeywordInput = document.getElementById("dictKeywordInput");
         const dictSearchBtn = document.getElementById("dictSearchBtn");
@@ -1242,6 +1348,58 @@
                 areaEl.innerHTML = html;
             } catch (e) {
                 areaEl.innerHTML = "<span style='color:red;'>天気情報の取得に失敗しました。</span>";
+            }
+        }
+
+        function warningNameFromCode(code) {
+            const names = {
+                "02":"大雨", "03":"洪水", "04":"大雪", "05":"暴風雪", "06":"暴風",
+                "07":"波浪", "08":"高潮", "09":"雷", "10":"濃霧", "11":"乾燥",
+                "12":"なだれ", "13":"低温", "14":"雷", "15":"強風", "16":"波浪",
+                "17":"融雪", "18":"洪水", "19":"大雨", "20":"濃霧"
+            };
+            return names[String(code)] || `警報・注意報（コード ${code}）`;
+        }
+
+        function warningClassFromName(name, status) {
+            const severe = /特別警報|危険警報|警報/.test(name);
+            if (severe) return "warning-severe";
+            if (status === "解除") return "";
+            return "warning-active";
+        }
+
+        async function loadWarningData(code) {
+            const areaEl = document.getElementById("warningResultArea");
+            if (!areaEl) return;
+            try {
+                const res = await fetch(`https://www.jma.go.jp/bosai/warning/data/warning/${code}.json`);
+                if (!res.ok) throw new Error("取得失敗");
+                const data = await res.json();
+                const headline = data.headlineText || "";
+                const entries = [];
+                for (const areaType of (data.areaTypes || [])) {
+                    for (const area of (areaType.areas || [])) {
+                        for (const warning of (area.warnings || [])) {
+                            if (!warning || !warning.status || warning.status.includes("発表警報・注意報はなし") || warning.status === "解除") continue;
+                            entries.push({ area: area.code, name: warningNameFromCode(warning.code), status: warning.status });
+                        }
+                    }
+                }
+                let html = `<div style="margin-bottom:6px;"><b>発表:</b> ${escapeNewsHtml(data.reportDatetime ? new Date(data.reportDatetime).toLocaleString("ja-JP") : "")}</div>`;
+                if (headline) html += `<div style="margin-bottom:6px;">${escapeNewsHtml(headline)}</div>`;
+                if (!entries.length) {
+                    html += `<div class="warning-none">現在、発表されている警報・注意報はありません。</div>`;
+                } else {
+                    const uniq = new Map();
+                    entries.forEach(item => uniq.set(`${item.name}|${item.status}`, item));
+                    uniq.forEach(item => {
+                        const cls = warningClassFromName(item.name, item.status);
+                        html += `<div class="warning-item ${cls}"><b>${escapeNewsHtml(item.name)}</b>：${escapeNewsHtml(item.status)}</div>`;
+                    });
+                }
+                areaEl.innerHTML = html;
+            } catch (e) {
+                areaEl.innerHTML = "<span style='color:red;'>警報・注意報の取得に失敗しました。</span>";
             }
         }
 
@@ -1321,6 +1479,7 @@
         if (weatherRegionSelect) {
             weatherRegionSelect.addEventListener("change", (e) => {
                 loadWeatherData(e.target.value);
+                loadWarningData(e.target.value);
             });
         }
 
@@ -1330,6 +1489,7 @@
             currentLocationDisplay.textContent = "天気・地震・火山情報";
             const selectVal = document.getElementById('weatherRegionSelect').value;
             loadWeatherData(selectVal);
+            loadWarningData(selectVal);
             loadEarthquakeData();
             loadVolcanoData();
         });
@@ -1338,7 +1498,10 @@
         setInterval(() => {
             if (weatherEarthquakeView.classList.contains("active")) {
                 const selectEl = document.getElementById('weatherRegionSelect');
-                if (selectEl) loadWeatherData(selectEl.value);
+                if (selectEl) {
+                    loadWeatherData(selectEl.value);
+                    loadWarningData(selectEl.value);
+                }
                 loadEarthquakeData();
                 loadVolcanoData();
             }
