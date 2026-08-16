@@ -2287,14 +2287,19 @@
         restoreNavigationState();
 
 // ==========================================
-// ブラウザバック（戻るボタン）対応の追加コード
+// スマホ対応版：ブラウザバック（戻る・スワイプ）対応コード
 // ==========================================
 
-// ① 初期ロード状態をブラウザの履歴に記憶させる
-history.replaceState({ viewId: "welcomeView", boardId: null }, "");
+// ① スマホブラウザに履歴として認識させるため、URLにハッシュ(#)を利用します
+history.replaceState({ viewId: "welcomeView", boardId: null }, "", "#welcome");
 
-// ② 画面の切り替わり（.active クラスの付与）を監視して、自動的に履歴に積む
+// ② 戻るボタンでの自動処理中かどうかを判定するフラグ（スマホの処理落ち対策）
+let isHandlingPopstate = false;
+
+// 画面の切り替わりを監視して履歴に積む
 const viewObserver = new MutationObserver((mutations) => {
+    if (isHandlingPopstate) return; // 戻るボタン操作による画面切り替え時は履歴を積まない
+
     mutations.forEach((mutation) => {
         if (mutation.type === "attributes" && mutation.attributeName === "class") {
             const target = mutation.target;
@@ -2302,27 +2307,26 @@ const viewObserver = new MutationObserver((mutations) => {
                 const currentViewId = target.id;
                 const currentState = history.state || {};
                 
-                // 同じ画面の重複保存を防ぎつつ、新しい画面が開かれたら履歴に追加
                 if (currentState.viewId !== currentViewId || currentState.boardId !== currentBoardId) {
-                    history.pushState({ viewId: currentViewId, boardId: currentBoardId }, "");
+                    // 【重要】スマホのスワイプバックを確実にするため、第3引数に「# + 画面ID」を付与
+                    history.pushState({ viewId: currentViewId, boardId: currentBoardId }, "", "#" + currentViewId);
                 }
             }
         }
     });
 });
 
-// 全ての画面要素（view-section）を監視対象にする
+// 監視の開始
 document.querySelectorAll(".view-section").forEach((el) => {
     viewObserver.observe(el, { attributes: true });
 });
 
-// ③ ブラウザの「戻る」「進む」ボタンが押された時の処理
+// ③ スマホのスワイプや「戻る」「進む」ボタンが押された時の処理
 window.addEventListener("popstate", (e) => {
+    isHandlingPopstate = true; // プログラムが画面を切り替えるので、監視フラグをストップ
+
     if (e.state && e.state.viewId) {
         const { viewId, boardId } = e.state;
-
-        // プログラムからの画面切り替えで再度履歴に積まれるのを防ぐため、一時的に監視を停止
-        viewObserver.disconnect();
 
         if (viewId === "threadListView" && boardId) {
             // 【使っていた板の一覧ページに戻る処理】
@@ -2338,9 +2342,8 @@ window.addEventListener("popstate", (e) => {
             welcomeView.classList.add("active");
             currentLocationDisplay.textContent = "トップページ";
         } else {
-            // スレッド詳細画面やその他の画面から戻った際のフォールバック処理
+            // その他の画面から戻った際のフォールバック処理
             if (viewId === "threadDetailView" && boardId) {
-                // スレッドから戻る場合は安全のため板の一覧へ戻す
                 currentBoardId = boardId;
                 currentLocationDisplay.textContent = ALL_BOARDS[boardId];
                 currentBoardTitleDisplay.textContent = `📂 ${ALL_BOARDS[boardId]} のスレッド一覧`;
@@ -2357,17 +2360,17 @@ window.addEventListener("popstate", (e) => {
                 }
             }
         }
-
-        // 表示の切り替えが終わったら監視を再開
-        setTimeout(() => {
-            document.querySelectorAll(".view-section").forEach((el) => {
-                viewObserver.observe(el, { attributes: true });
-            });
-        }, 50);
     } else {
         // 履歴情報が無い場合は初期画面に戻す
         navHomeBtn.click();
     }
+
+    // 画面の切り替え描画が完全に終わってから監視フラグを元に戻す
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            isHandlingPopstate = false;
+        }, 50);
+    });
 });
     </script>
 </body>
