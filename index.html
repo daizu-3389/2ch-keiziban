@@ -90,6 +90,9 @@
         .sidebar-box .cat-title:first-child { margin-top: 0; }
         .sidebar-box .board-links-area { padding: 3px 0 3px 3px; line-height: 1.5; }
         .sidebar-box .board-link { font-size: 13px; margin-right: 4px; display: inline-block; }
+        .board-search-input { width: 100%; box-sizing: border-box; margin: 3px 0 6px; padding: 4px 5px; font-size: 12px; border: 1px solid #999; background: #fff; color: #000; }
+        .ace-special-title { background:#fff0f0 !important; color:#a00000 !important; border:1px solid #d00000 !important; font-weight:900; padding:2px 4px; }
+        .ace-special-links { background:#fff8f8; border:1px solid #e0a0a0; padding:5px 4px; margin-bottom:5px; font-weight:bold; }
 
         .main-content-box { flex-grow: 1; min-width: 0; }
         .board-title { 
@@ -432,6 +435,9 @@
         body.dark a { color:#66b3ff; }
         body.dark a:visited { color:#b08cff; }
         body.dark a:hover { color:#fff; background:#333; }
+        body.dark .board-search-input { background:#101010 !important; color:#e7e7e7 !important; border-color:#555 !important; }
+        body.dark .ace-special-title { background:#351818 !important; color:#ff8a8a !important; border-color:#8a4444 !important; }
+        body.dark .ace-special-links { background:#241616 !important; border-color:#744444 !important; }
 
         /* 📰 カテゴリ別ニュース */
         .news-toolbar { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:0 0 8px; }
@@ -447,6 +453,7 @@
         .warning-item.warning-severe { border-left-color:#d00000; background:#fff0f0; }
         .warning-item.warning-active { border-left-color:#e07b00; }
         @media (max-width: 768px) {
+            .board-search-input { font-size: 16px !important; padding: 7px; }
             .news-category-grid { grid-template-columns:1fr; gap:6px; }
             .news-toolbar { align-items:stretch; flex-direction:column; }
             .news-toolbar .btn-submit { width:100%; }
@@ -569,6 +576,7 @@
         <div class="nav-right-area">
             <span>👥 現在: <b id="onlineCount">0</b> 人</span> | 
             <a id="navReportBtn">💬 ご意見・お問い合わせ</a> | 
+            <a id="navTermsBtn">📜 利用規約</a> |
             <a id="navAdminBtn">⚙️ 管理者部屋</a>
             <button class="dark-mode-btn" id="darkModeToggle">🌙 ダーク</button>
         </div>
@@ -582,6 +590,7 @@
             
             <div class="sidebar-box">
                 <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px; color: #000; border-bottom: 1px solid #808080; padding-bottom: 2px;">📁 板メニュー</div>
+                <input type="search" id="boardSearchInput" class="board-search-input" placeholder="🔎 全板から検索..." autocomplete="off">
                 <div id="bbsMenuArea"></div>
                 <div class="cat-title">⏳ 外部情報</div>
                 <div class="board-links-area">
@@ -789,9 +798,15 @@
         if (localStorage.getItem(TERMS_STORAGE_KEY) === "1") {
             termsModal.style.display = "none";
         }
+        const termsActionBtn = document.getElementById("agreeTermsBtn");
         document.getElementById("agreeTermsBtn").addEventListener("click", () => {
             localStorage.setItem(TERMS_STORAGE_KEY, "1");
             termsModal.style.display = "none";
+            termsActionBtn.textContent = "閉じる";
+        });
+        document.getElementById("navTermsBtn")?.addEventListener("click", () => {
+            termsModal.style.display = "flex";
+            if (localStorage.getItem(TERMS_STORAGE_KEY) === "1") termsActionBtn.textContent = "閉じる";
         });
 
         // ⚡ Supabase設定
@@ -862,9 +877,10 @@
         }
 
         const BOARD_DATA = {
+            "★ ACE 特別枠 ★": { "ace": "ACE専用板" },
             "■ 地震・速報・実況": { "namazu": "緊急地震速報", "headline": "ニュース速報", "livegalileo": "なんでも実況G", "liveanb": "実況ch", "livecx": "フジテレビ実況", "livetbs": "TBS実況", "livenhk": "NHK総合実況", "liventv": "日本テレビ実況", "liveasahi": "テレビ朝日実況", "livetx": "テレビ東京実況" },
             "■ ニュース・社会事情": { "newsplus": "ニュース速報＋", "mnewsplus": "芸スポ速報＋", "news4plus": "東アジアニュース＋", "dqnplus": "痛いニュース＋", "bizplus": "ビジネスニュース＋", "scienceplus": "科学ニュース＋", "wildplus": "国際ニュース＋", "shakai": "社会・世評", "justice": "裁判・司法" },
-            "■ ネット機能・雑談": { "vip": "ニュー速VIP", "news4vip": "ニュー速VIP+", "zatsudan": "なんでも雑談", "morning": "朝生雑談", "tomorrow": "明日があるさ", "alone": "一人でお留守番", "lobby": "ロビー", "welcome": "新機能お試しの場" },
+            "■ ネット機能・雑談": { "vip": "ACE", "news4vip": "ACE+", "zatsudan": "なんでも雑談", "morning": "朝生雑談", "tomorrow": "明日があるさ", "alone": "一人でお留守番", "lobby": "ロビー", "welcome": "新機能お試しの場" },
             "■ ゲーム・ハード・実況": { "game": "ゲーム実況", "smartphone": "スマホゲーム", "netgame": "ネトゲ実況", "hard": "ゲームハード", "retro": "レトロゲーム", "rpg": "RPG", "arc": "アーケード", "ff": "FF・DQ", "gal": "エロゲ批評", "board": "卓上ゲーム" },
             "■ アニメ・漫画・特撮": { "anime": "アニメ・マンガ", "comic": "少年漫画", "rcomic": "4コマ漫画", "voice": "声優", "moe": "萌えニュース", "subcul": "サブカル", "sfx": "特撮", "illust": "イラスト・CG" },
             "■ コンピュータ・ガジェット": { "pc": "PC・ガジェット", "jisaku": "自作PC", "mac": "Mac", "linux": "Linux", "iphone": "iPhone", "android": "Android", "software": "ソフトウェア", "program": "プログラミング", "network": "インターネット" },
@@ -898,6 +914,8 @@
         const navHomeBtn = document.getElementById("navHomeBtn");
         const navReportBtn = document.getElementById("navReportBtn");
         const navAdminBtn = document.getElementById("navAdminBtn");
+        const navTermsBtn = document.getElementById("navTermsBtn");
+        const boardSearchInput = document.getElementById("boardSearchInput");
         const navWeatherBtn = document.getElementById("navWeatherBtn");
         const navNewsBtn = document.getElementById("navNewsBtn");
         const navDictBtn = document.getElementById("navDictBtn");
@@ -1042,30 +1060,43 @@
         postNameInput.addEventListener("input", (e) => saveName(e.target.value));
         checkNameLock();
 
-        function renderBbsMenu() {
+        function renderBbsMenu(filter = "") {
             bbsMenuArea.innerHTML = "";
+            const kw = filter.trim().toLowerCase();
             for (let categoryName in BOARD_DATA) {
+                const matchingBoards = Object.entries(BOARD_DATA[categoryName]).filter(([boardId, boardName]) =>
+                    !kw || boardName.toLowerCase().includes(kw) || boardId.toLowerCase().includes(kw) || categoryName.toLowerCase().includes(kw)
+                );
+                if (matchingBoards.length === 0) continue;
+
                 const catTitle = document.createElement("div");
                 catTitle.className = "cat-title";
+                if (categoryName === "★ ACE 特別枠 ★") catTitle.classList.add("ace-special-title");
                 catTitle.textContent = categoryName;
                 bbsMenuArea.appendChild(catTitle);
-                
+
                 const linksWrapper = document.createElement("div");
                 linksWrapper.className = "board-links-area";
-                
-                for (let boardId in BOARD_DATA[categoryName]) {
+                if (categoryName === "★ ACE 特別枠 ★") linksWrapper.classList.add("ace-special-links");
+
+                matchingBoards.forEach(([boardId, boardName]) => {
                     const a = document.createElement("a");
                     a.className = "board-link";
-                    a.textContent = BOARD_DATA[categoryName][boardId];
+                    a.textContent = boardName;
                     a.addEventListener("click", () => switchBoard(boardId));
                     linksWrapper.appendChild(a);
                     linksWrapper.appendChild(document.createTextNode(" "));
-                }
+                });
                 bbsMenuArea.appendChild(linksWrapper);
+            }
+
+            if (!bbsMenuArea.children.length) {
+                bbsMenuArea.innerHTML = "<div style='color:#666;font-size:12px;padding:4px;'>該当する板がありません。</div>";
             }
         }
 
         renderBbsMenu();
+        boardSearchInput?.addEventListener("input", (e) => renderBbsMenu(e.target.value));
 
         function hideAllViews() {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
@@ -1529,7 +1560,8 @@
 
                 const countSpan = document.createElement("span");
                 countSpan.className = "res-count";
-                countSpan.textContent = thread.replyCount ? `[${thread.replyCount}res]` : "[1res]";
+                const replyCount = Number.isFinite(Number(thread.replyCount)) ? Number(thread.replyCount) : 0;
+                countSpan.textContent = `（${replyCount}res）`;
 
                 div.appendChild(document.createTextNode(`${index}: `));
                 div.appendChild(a);
@@ -1565,8 +1597,18 @@
                     return;
                 }
 
+                const threadRows = data || [];
+                const countMap = {};
+                if (threadRows.length > 0) {
+                    const threadIds = threadRows.map(t => t.id);
+                    const { data: postRows } = await supabase.from('posts').select('thread_id').in('thread_id', threadIds);
+                    (postRows || []).forEach(p => { countMap[p.thread_id] = (countMap[p.thread_id] || 0) + 1; });
+                }
                 allThreadData = {};
-                (data || []).forEach(t => { allThreadData[t.id] = { title: t.title, replyCount: t.reply_count }; });
+                threadRows.forEach(t => {
+                    const actualCount = Object.prototype.hasOwnProperty.call(countMap, t.id) ? countMap[t.id] : t.reply_count;
+                    allThreadData[t.id] = { title: t.title, replyCount: Number.isFinite(Number(actualCount)) ? Number(actualCount) : 0 };
+                });
                 renderThreadList(allThreadData, searchInput ? searchInput.value : "");
             };
 
@@ -2134,9 +2176,18 @@
                 }
             };
 
-            supabase.from('global_logs').select('*').order('created_at', { ascending: false }).limit(100).then(({ data }) => {
-                if (data) data.reverse().forEach(log => processLog(log, log.id));
-            });
+            const pollAdminLogs = async () => {
+                const { data, error } = await supabase.from('global_logs').select('*').order('created_at', { ascending: false }).limit(100);
+                if (error) {
+                    adminLogArea.innerHTML = `<div style="color:#c00;font-size:12px;">ログ取得エラー: ${String(error.message || "取得失敗").replace(/</g,"&lt;")}</div>`;
+                    return;
+                }
+                (data || []).slice().reverse().forEach(log => processLog(log, log.id));
+            };
+            pollAdminLogs();
+            if (!window.__adminLogPollTimer) {
+                window.__adminLogPollTimer = setInterval(pollAdminLogs, 3000);
+            }
 
             const adminLogChannel = supabase.channel('admin-global-logs')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_logs' }, payload => processLog(payload.new, payload.new.id))
