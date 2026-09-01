@@ -1906,83 +1906,97 @@
             saveDraftState();
         });
 
-        // 🔒 プライベートチャット（Supabase Auth + RPC + RLSで保護）
+        // 🔒 プライベートチャット（ログイン不要・招待コード方式）
         let currentPrivateChatId = null;
-        let currentPrivateChatChannel = null;
+        let currentPrivateInviteCode = null;
+        let currentPrivateCreatorToken = null;
+        let privatePollTimer = null;
+        const PRIVATE_CHAT_STORE = 'nanaseka_private_chats_v2';
 
         function formatPrivateDate(v) { try { return new Date(v).toLocaleString('ja-JP'); } catch { return ''; } }
-        async function requirePrivateChatUser() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) { alert('プライベートチャットを使うにはログインが必要です。'); return null; }
-            return user;
-        }
-        function privateCode() {
+        function privateCode(len = 10) {
             const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            const a=new Uint32Array(8); crypto.getRandomValues(a);
+            const a=new Uint32Array(len); crypto.getRandomValues(a);
             return Array.from(a,v=>chars[v%chars.length]).join('');
         }
-        async function cleanupPrivateChats() {
-            // RPCがあれば期限切れをDB側で掃除。定期ジョブSQLも別途用意。
-            await supabase.rpc('cleanup_expired_private_chats');
+        function privateToken() { return privateCode(24) + privateCode(24); }
+        function getSavedPrivateChats() { try { return JSON.parse(localStorage.getItem(PRIVATE_CHAT_STORE) || '[]'); } catch { return []; } }
+        function savePrivateChat(chat) {
+            const rows=getSavedPrivateChats().filter(x=>x.id!==chat.id);
+            rows.unshift(chat); localStorage.setItem(PRIVATE_CHAT_STORE,JSON.stringify(rows.slice(0,50)));
         }
-        async function loadPrivateChats() {
-            const user = await requirePrivateChatUser(); if (!user) return;
-            await cleanupPrivateChats();
-            const list=document.getElementById('privateChatList'); list.textContent='読み込み中...';
-            const { data: memberships, error } = await supabase.from('private_chat_members').select('chat_id, private_chats(*)').eq('user_id', user.id).order('joined_at',{ascending:false});
-            if (error) { list.textContent='読み込みエラー: '+error.message; return; }
-            if (!memberships?.length) { list.textContent='参加中のチャットはありません。'; return; }
+        function removeSavedPrivateChat(id) {
+            localStorage.setItem(PRIVATE_CHAT_STORE,JSON.stringify(getSavedPrivateChats().filter(x=>x.id!==id)));
+        }
+        async function cleanupPrivateChats() { await supabase.rpc('cleanup_expired_private_chats'); }
+        function renderSavedPrivateChats() {
+            const list=document.getElementById('privateChatList');
+            const chats=getSavedPrivateChats();
+            const now=Date.now();
+            const active=chats.filter(c=>!c.expires_at || new Date(c.expires_at).getTime()>now);
+            if(active.length!==chats.length) localStorage.setItem(PRIVATE_CHAT_STORE,JSON.stringify(active));
+            if(!active.length){ list.textContent='参加中のチャットはありません。招待コードを入力するとこの端末の一覧に保存されます。'; return; }
             list.innerHTML='';
-            memberships.forEach(m=>{ const c=m.private_chats; if(!c) return; const b=document.createElement('button'); b.className='btn-submit'; b.style.margin='4px'; b.textContent='🔒 '+c.title; b.onclick=()=>openPrivateChat(c.id,c.title,c.creator_id,c.expires_at); list.appendChild(b); });
+            active.forEach(c=>{ const b=document.createElement('button'); b.className='btn-submit'; b.style.margin='4px'; b.textContent='🔒 '+c.title; b.onclick=()=>openPrivateChat(c.id,c.title,c.invite_code,c.creator_token,c.expires_at); list.appendChild(b); });
         }
-        async function openPrivateChat(id,title,creatorId,expiresAt) {
-            const user=await requirePrivateChatUser(); if(!user) return;
-            currentPrivateChatId=id;
+        async function loadPrivateChats() { await cleanupPrivateChats(); renderSavedPrivateChats(); }
+        async function openPrivateChat(id,title,inviteCode,creatorToken,expiresAt) {
+            currentPrivateChatId=id; currentPrivateInviteCode=inviteCode; currentPrivateCreatorToken=creatorToken||null;
             document.getElementById('privateChatRoom').style.display='block';
             document.getElementById('privateChatRoomTitle').textContent='🔒 '+title;
-            document.getElementById('privateChatMeta').textContent='自動削除予定：'+formatPrivateDate(expiresAt);
-            document.getElementById('deletePrivateChatBtn').style.display=(user.id===creatorId?'inline-block':'none');
+            document.getElementById('privateChatMeta').textContent='自動削除予定：'+formatPrivateDate(expiresAt)+' ／ 招待コードを知っている人だけ参加できます';
+            document.getElementById('deletePrivateChatBtn').style.display=creatorToken?'inline-block':'none';
             const box=document.getElementById('privateMessageList');
             const load=async()=>{
-                const {data,error}=await supabase.from('private_messages').select('*').eq('chat_id',id).order('created_at',{ascending:true});
-                if(error){box.textContent='読み込みエラー: '+error.message;return;}
+                if(!currentPrivateChatId || !currentPrivateInviteCode) return;
+                const {data,error}=await supabase.rpc('get_private_messages',{p_chat_id:currentPrivateChatId,p_invite_code:currentPrivateInviteCode});
+                if(error){ box.textContent='読み込みエラー: '+error.message; return; }
                 box.innerHTML=''; (data||[]).forEach((m,i)=>{const d=document.createElement('div');d.className='post-group';d.innerHTML=`<div class="post-dt">${i+1} ：<b>${escapeHtml(m.name||'名無しさん')}</b> ：${formatPrivateDate(m.created_at)}</div><div class="post-dd"></div>`;d.querySelector('.post-dd').textContent=m.text||'';box.appendChild(d);}); box.scrollTop=box.scrollHeight;
             };
             await load();
-            if(currentPrivateChatChannel) supabase.removeChannel(currentPrivateChatChannel);
-            currentPrivateChatChannel=supabase.channel('private-chat-'+id).on('postgres_changes',{event:'*',schema:'public',table:'private_messages',filter:`chat_id=eq.${id}`},load).subscribe();
+            if(privatePollTimer) clearInterval(privatePollTimer);
+            privatePollTimer=setInterval(load,2000);
             document.getElementById('privateChatRoom').scrollIntoView({behavior:'smooth',block:'start'});
         }
         navPrivateChatBtn?.addEventListener('click',async()=>{ hideAllViews(); privateChatView.classList.add('active'); currentLocationDisplay.textContent='プライベートチャット'; saveNavigationState('privateChatView',null,null,''); await loadPrivateChats(); });
         document.getElementById('createPrivateChatBtn').addEventListener('click',async()=>{
-            const user=await requirePrivateChatUser(); if(!user)return;
             const title=document.getElementById('privateChatTitle').value.trim(); if(!title)return alert('チャット名を入力してください');
-            const code=privateCode(); const {data,error}=await supabase.rpc('create_private_chat',{p_title:title,p_invite_code:code});
+            const code=privateCode(); const creatorToken=privateToken();
+            const {data,error}=await supabase.rpc('create_private_chat',{p_title:title,p_invite_code:code,p_creator_token:creatorToken});
             if(error)return alert('作成エラー: '+error.message);
+            const chat=Array.isArray(data)?data[0]:data;
+            if(!chat?.id)return alert('作成結果を取得できませんでした');
+            const saved={id:chat.id,title:chat.title||title,invite_code:code,creator_token:creatorToken,expires_at:chat.expires_at};
+            savePrivateChat(saved);
             document.getElementById('privateCreateResult').innerHTML='作成しました。招待コード：<span class="private-code"></span>（24時間で自動削除）'; document.querySelector('#privateCreateResult .private-code').textContent=code;
             document.getElementById('privateChatTitle').value=''; await loadPrivateChats();
+            openPrivateChat(saved.id,saved.title,code,creatorToken,saved.expires_at);
         });
         document.getElementById('joinPrivateChatBtn').addEventListener('click',async()=>{
-            const user=await requirePrivateChatUser(); if(!user)return;
             const code=document.getElementById('privateInviteCode').value.trim().toUpperCase(); if(!code)return alert('招待コードを入力してください');
             const {data,error}=await supabase.rpc('join_private_chat',{p_invite_code:code});
             if(error)return alert('参加できませんでした: '+error.message);
-            document.getElementById('privateInviteCode').value=''; await loadPrivateChats();
-            if(data?.id) openPrivateChat(data.id,data.title,data.creator_id,data.expires_at);
+            const chat=Array.isArray(data)?data[0]:data;
+            if(!chat?.id)return alert('有効なプライベートチャットが見つかりません');
+            const saved={id:chat.id,title:chat.title,invite_code:code,creator_token:null,expires_at:chat.expires_at};
+            savePrivateChat(saved); document.getElementById('privateInviteCode').value=''; await loadPrivateChats();
+            openPrivateChat(saved.id,saved.title,code,null,saved.expires_at);
         });
         document.getElementById('sendPrivateMessageBtn').addEventListener('click',async()=>{
-            const user=await requirePrivateChatUser(); if(!user||!currentPrivateChatId)return;
+            if(!currentPrivateChatId||!currentPrivateInviteCode)return;
             const text=document.getElementById('privateMessageText').value.trim(); if(!text)return;
             const name=document.getElementById('privateMessageName').value.trim()||'名無しさん';
-            const {error}=await supabase.from('private_messages').insert([{chat_id:currentPrivateChatId,user_id:user.id,name,text}]);
+            const {error}=await supabase.rpc('send_private_message',{p_chat_id:currentPrivateChatId,p_invite_code:currentPrivateInviteCode,p_name:name,p_text:text});
             if(error)return alert('送信エラー: '+error.message); document.getElementById('privateMessageText').value='';
         });
         document.getElementById('deletePrivateChatBtn').addEventListener('click',async()=>{
-            const user=await requirePrivateChatUser(); if(!user||!currentPrivateChatId)return;
+            if(!currentPrivateChatId||!currentPrivateCreatorToken)return;
             if(!confirm('このプライベートチャットを完全に削除しますか？'))return;
-            const {error}=await supabase.from('private_chats').delete().eq('id',currentPrivateChatId).eq('creator_id',user.id);
+            const {error}=await supabase.rpc('delete_private_chat',{p_chat_id:currentPrivateChatId,p_creator_token:currentPrivateCreatorToken});
             if(error)return alert('削除エラー: '+error.message);
-            currentPrivateChatId=null; if(currentPrivateChatChannel) supabase.removeChannel(currentPrivateChatChannel); document.getElementById('privateChatRoom').style.display='none'; await loadPrivateChats();
+            removeSavedPrivateChat(currentPrivateChatId); currentPrivateChatId=null; currentPrivateInviteCode=null; currentPrivateCreatorToken=null;
+            if(privatePollTimer){clearInterval(privatePollTimer);privatePollTimer=null;}
+            document.getElementById('privateChatRoom').style.display='none'; await loadPrivateChats();
         });
 
         // 🛠️ 管理者部屋
