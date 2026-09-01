@@ -471,6 +471,14 @@
             #dictionaryView #dictResultArea { font-size:14px !important; padding:8px !important; overflow-wrap:anywhere; }
             #dictionaryView #dictResultArea img { max-width:100% !important; height:auto !important; }
         }
+    
+        /* 🔒 プライベートチャット */
+        .private-chat-card{border:1px solid #808080;background:#fffff7;padding:12px;margin-bottom:12px}
+        .private-chat-card h3{margin:0 0 8px;color:#000080;font-size:15px}
+        .private-code{font-family:monospace;font-weight:bold;letter-spacing:2px;background:#eee;border:1px solid #888;padding:7px;display:inline-block;margin:6px 0}
+        .private-msg-box{height:420px;overflow-y:auto;border:1px solid #808080;background:#fff;padding:8px}
+        body.dark .private-chat-card{background:#202020;border-color:#666} body.dark .private-code{background:#111;border-color:#666}
+
     </style>
 </head>
 <body>
@@ -577,6 +585,7 @@
             <span>👥 現在: <b id="onlineCount">0</b> 人</span> | 
             <a id="navReportBtn">💬 ご意見・お問い合わせ</a> | 
             <a id="navTermsBtn">📜 利用規約</a> |
+            <a id="navPrivateChatBtn">🔒 プライベートチャット</a> |
             <a id="navAdminBtn">⚙️ 管理者部屋</a>
             <button class="dark-mode-btn" id="darkModeToggle">🌙 ダーク</button>
         </div>
@@ -635,6 +644,36 @@
                         <div class="form-row"><label>本文：</label><textarea id="postMessage" rows="4" placeholder="ここに書き込むメッセージを入力"></textarea></div>
                         <div class="form-row"><label>画像：</label><input type="file" id="postImageInput" accept="image/*" style="font-size:12px;"><span style="font-size:11px; color:#666; margin-left:4px;">3MBまで</span></div>
                         <button class="btn-submit" id="sendPostBtn">書き込む</button>
+                    </div>
+                </div>
+
+                <!-- 🔒 プライベートチャット -->
+                <div id="privateChatView" class="view-section">
+                    <div class="board-title">🔒 プライベートチャット</div>
+                    <div class="private-chat-card">
+                        <h3>新しいプライベートチャットを作成</h3>
+                        <p style="font-size:12px;margin:0 0 8px;">作成者が削除するか、作成から24時間で自動的に削除されます。</p>
+                        <div class="form-row"><label>チャット名：</label><input id="privateChatTitle" maxlength="60" placeholder="例：ゲーム作戦会議"></div>
+                        <button class="btn-submit" id="createPrivateChatBtn">作成して招待コードを発行</button>
+                        <div id="privateCreateResult" style="margin-top:8px;font-size:12px;"></div>
+                    </div>
+                    <div class="private-chat-card">
+                        <h3>招待コードで参加</h3>
+                        <div class="form-row"><label>コード：</label><input id="privateInviteCode" maxlength="16" placeholder="例：AB12CD34"></div>
+                        <button class="btn-submit" id="joinPrivateChatBtn">参加する</button>
+                    </div>
+                    <div class="private-chat-card">
+                        <h3>参加中のプライベートチャット</h3>
+                        <div id="privateChatList">読み込み待ち...</div>
+                    </div>
+                    <div id="privateChatRoom" class="private-chat-card" style="display:none;">
+                        <h3 id="privateChatRoomTitle">プライベートチャット</h3>
+                        <div id="privateChatMeta" style="font-size:11px;margin-bottom:8px;"></div>
+                        <div id="privateMessageList" class="private-msg-box"></div>
+                        <div class="form-row" style="margin-top:8px;"><label>名前：</label><input id="privateMessageName" maxlength="40" placeholder="名無しさん"></div>
+                        <div class="form-row"><label>本文：</label><textarea id="privateMessageText" rows="3" maxlength="1000" placeholder="メッセージを入力"></textarea></div>
+                        <button class="btn-submit" id="sendPrivateMessageBtn">送信</button>
+                        <button class="btn-submit" id="deletePrivateChatBtn" style="display:none;margin-left:6px;">このチャットを削除</button>
                     </div>
                 </div>
 
@@ -928,6 +967,8 @@
         const threadCreatorNameInput = document.getElementById("threadCreatorName");
         const threadFirstMessageInput = document.getElementById("threadFirstMessage");
         const createThreadBtn = document.getElementById("createThreadBtn");
+        const privateChatView = document.getElementById("privateChatView");
+        const navPrivateChatBtn = document.getElementById("navPrivateChatBtn");
         const postNameInput = document.getElementById("postName");
         const postMessageInput = document.getElementById("postMessage");
         const sendPostBtn = document.getElementById("sendPostBtn");
@@ -1582,6 +1623,9 @@
             if (searchInput) searchInput.value = "";
 
             const fetchThreads = async () => {
+                // 7日を過ぎたスレッドは通常画面から即時削除（DB側の定期削除SQLも併用）
+                const expireBefore = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+                await supabase.from('threads').delete().eq('board_id', boardId).lt('created_at', expireBefore);
                 let { data, error } = await supabase.from('threads').select('*').eq('board_id', boardId).order('created_at', { ascending: false });
                 
                 if (error) {
@@ -1826,6 +1870,16 @@
             const imgData = await readImageFile(postImgInput);
             const hasNgWord = NG_WORDS.some(w => normalizeForNgCheck(text).includes(w));
 
+            // 500レス到達でスレッドを閉鎖・削除
+            const { count: currentPostCount, error: countError } = await supabase.from('posts').select('*', { count: 'exact', head: true }).eq('thread_id', currentThreadId);
+            if (countError) return alert("レス数の確認に失敗しました: " + countError.message);
+            if ((currentPostCount || 0) >= 500) {
+                await supabase.from('threads').delete().eq('id', currentThreadId);
+                alert("このスレッドは500レスに到達したため終了しました。");
+                backToListViewBtn.click();
+                return;
+            }
+
             const { data: postData, error: postErr } = await supabase.from('posts').insert([{ thread_id: currentThreadId, name: name, text: text, time: timeStr, uid: userId, image_data: imgData }]).select().single();
             if (postErr) return alert("書き込みエラー: " + postErr.message);
 
@@ -1836,13 +1890,99 @@
             }]);
 
             const { data: threadData } = await supabase.from('threads').select('reply_count').eq('id', currentThreadId).single();
-            await supabase.from('threads').update({ reply_count: (threadData?.reply_count || 0) + 1 }).eq('id', currentThreadId);
+            const nextReplyCount = (threadData?.reply_count || 0) + 1;
+            if (nextReplyCount >= 500) {
+                await supabase.from('threads').delete().eq('id', currentThreadId);
+                alert("この書き込みで500レスに到達したため、スレッドは終了しました。");
+                backToListViewBtn.click();
+                return;
+            }
+            await supabase.from('threads').update({ reply_count: nextReplyCount }).eq('id', currentThreadId);
 
             lockName(name);
             updateLastPostTime();
             postMessageInput.value = "";
             if (postImgInput) postImgInput.value = "";
             saveDraftState();
+        });
+
+        // 🔒 プライベートチャット（Supabase Auth + RPC + RLSで保護）
+        let currentPrivateChatId = null;
+        let currentPrivateChatChannel = null;
+
+        function formatPrivateDate(v) { try { return new Date(v).toLocaleString('ja-JP'); } catch { return ''; } }
+        async function requirePrivateChatUser() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) { alert('プライベートチャットを使うにはログインが必要です。'); return null; }
+            return user;
+        }
+        function privateCode() {
+            const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            const a=new Uint32Array(8); crypto.getRandomValues(a);
+            return Array.from(a,v=>chars[v%chars.length]).join('');
+        }
+        async function cleanupPrivateChats() {
+            // RPCがあれば期限切れをDB側で掃除。定期ジョブSQLも別途用意。
+            await supabase.rpc('cleanup_expired_private_chats');
+        }
+        async function loadPrivateChats() {
+            const user = await requirePrivateChatUser(); if (!user) return;
+            await cleanupPrivateChats();
+            const list=document.getElementById('privateChatList'); list.textContent='読み込み中...';
+            const { data: memberships, error } = await supabase.from('private_chat_members').select('chat_id, private_chats(*)').eq('user_id', user.id).order('joined_at',{ascending:false});
+            if (error) { list.textContent='読み込みエラー: '+error.message; return; }
+            if (!memberships?.length) { list.textContent='参加中のチャットはありません。'; return; }
+            list.innerHTML='';
+            memberships.forEach(m=>{ const c=m.private_chats; if(!c) return; const b=document.createElement('button'); b.className='btn-submit'; b.style.margin='4px'; b.textContent='🔒 '+c.title; b.onclick=()=>openPrivateChat(c.id,c.title,c.creator_id,c.expires_at); list.appendChild(b); });
+        }
+        async function openPrivateChat(id,title,creatorId,expiresAt) {
+            const user=await requirePrivateChatUser(); if(!user) return;
+            currentPrivateChatId=id;
+            document.getElementById('privateChatRoom').style.display='block';
+            document.getElementById('privateChatRoomTitle').textContent='🔒 '+title;
+            document.getElementById('privateChatMeta').textContent='自動削除予定：'+formatPrivateDate(expiresAt);
+            document.getElementById('deletePrivateChatBtn').style.display=(user.id===creatorId?'inline-block':'none');
+            const box=document.getElementById('privateMessageList');
+            const load=async()=>{
+                const {data,error}=await supabase.from('private_messages').select('*').eq('chat_id',id).order('created_at',{ascending:true});
+                if(error){box.textContent='読み込みエラー: '+error.message;return;}
+                box.innerHTML=''; (data||[]).forEach((m,i)=>{const d=document.createElement('div');d.className='post-group';d.innerHTML=`<div class="post-dt">${i+1} ：<b>${escapeHtml(m.name||'名無しさん')}</b> ：${formatPrivateDate(m.created_at)}</div><div class="post-dd"></div>`;d.querySelector('.post-dd').textContent=m.text||'';box.appendChild(d);}); box.scrollTop=box.scrollHeight;
+            };
+            await load();
+            if(currentPrivateChatChannel) supabase.removeChannel(currentPrivateChatChannel);
+            currentPrivateChatChannel=supabase.channel('private-chat-'+id).on('postgres_changes',{event:'*',schema:'public',table:'private_messages',filter:`chat_id=eq.${id}`},load).subscribe();
+            document.getElementById('privateChatRoom').scrollIntoView({behavior:'smooth',block:'start'});
+        }
+        navPrivateChatBtn?.addEventListener('click',async()=>{ hideAllViews(); privateChatView.classList.add('active'); currentLocationDisplay.textContent='プライベートチャット'; saveNavigationState('privateChatView',null,null,''); await loadPrivateChats(); });
+        document.getElementById('createPrivateChatBtn').addEventListener('click',async()=>{
+            const user=await requirePrivateChatUser(); if(!user)return;
+            const title=document.getElementById('privateChatTitle').value.trim(); if(!title)return alert('チャット名を入力してください');
+            const code=privateCode(); const {data,error}=await supabase.rpc('create_private_chat',{p_title:title,p_invite_code:code});
+            if(error)return alert('作成エラー: '+error.message);
+            document.getElementById('privateCreateResult').innerHTML='作成しました。招待コード：<span class="private-code"></span>（24時間で自動削除）'; document.querySelector('#privateCreateResult .private-code').textContent=code;
+            document.getElementById('privateChatTitle').value=''; await loadPrivateChats();
+        });
+        document.getElementById('joinPrivateChatBtn').addEventListener('click',async()=>{
+            const user=await requirePrivateChatUser(); if(!user)return;
+            const code=document.getElementById('privateInviteCode').value.trim().toUpperCase(); if(!code)return alert('招待コードを入力してください');
+            const {data,error}=await supabase.rpc('join_private_chat',{p_invite_code:code});
+            if(error)return alert('参加できませんでした: '+error.message);
+            document.getElementById('privateInviteCode').value=''; await loadPrivateChats();
+            if(data?.id) openPrivateChat(data.id,data.title,data.creator_id,data.expires_at);
+        });
+        document.getElementById('sendPrivateMessageBtn').addEventListener('click',async()=>{
+            const user=await requirePrivateChatUser(); if(!user||!currentPrivateChatId)return;
+            const text=document.getElementById('privateMessageText').value.trim(); if(!text)return;
+            const name=document.getElementById('privateMessageName').value.trim()||'名無しさん';
+            const {error}=await supabase.from('private_messages').insert([{chat_id:currentPrivateChatId,user_id:user.id,name,text}]);
+            if(error)return alert('送信エラー: '+error.message); document.getElementById('privateMessageText').value='';
+        });
+        document.getElementById('deletePrivateChatBtn').addEventListener('click',async()=>{
+            const user=await requirePrivateChatUser(); if(!user||!currentPrivateChatId)return;
+            if(!confirm('このプライベートチャットを完全に削除しますか？'))return;
+            const {error}=await supabase.from('private_chats').delete().eq('id',currentPrivateChatId).eq('creator_id',user.id);
+            if(error)return alert('削除エラー: '+error.message);
+            currentPrivateChatId=null; if(currentPrivateChatChannel) supabase.removeChannel(currentPrivateChatChannel); document.getElementById('privateChatRoom').style.display='none'; await loadPrivateChats();
         });
 
         // 🛠️ 管理者部屋
