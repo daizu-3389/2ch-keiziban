@@ -1928,7 +1928,11 @@
         function removeSavedPrivateChat(id) {
             localStorage.setItem(PRIVATE_CHAT_STORE,JSON.stringify(getSavedPrivateChats().filter(x=>x.id!==id)));
         }
-        async function cleanupPrivateChats() { await supabase.rpc('cleanup_expired_private_chats'); }
+        async function cleanupPrivateChats() {
+            const { error } = await supabase.rpc('cleanup_expired_private_chats');
+            // cleanup用RPCが失敗しても、一覧表示自体は止めない
+            if (error) console.warn('private chat cleanup:', error.message);
+        }
         function renderSavedPrivateChats() {
             const list=document.getElementById('privateChatList');
             const chats=getSavedPrivateChats();
@@ -1963,7 +1967,13 @@
             const title=document.getElementById('privateChatTitle').value.trim(); if(!title)return alert('チャット名を入力してください');
             const code=privateCode(); const creatorToken=privateToken();
             const {data,error}=await supabase.rpc('create_private_chat',{p_title:title,p_invite_code:code,p_creator_token:creatorToken});
-            if(error)return alert('作成エラー: '+error.message);
+            if(error){
+                const msg = error.message || '';
+                if (msg.includes('function') || msg.includes('does not exist')) {
+                    return alert('プライベートチャット機能のSupabase設定が未完了です。\n\n同梱の private_chat_setup_v3.sql をSupabase SQL Editorで実行してください。');
+                }
+                return alert('作成エラー: ' + msg);
+            }
             const chat=Array.isArray(data)?data[0]:data;
             if(!chat?.id)return alert('作成結果を取得できませんでした');
             const saved={id:chat.id,title:chat.title||title,invite_code:code,creator_token:creatorToken,expires_at:chat.expires_at};
@@ -1975,7 +1985,13 @@
         document.getElementById('joinPrivateChatBtn').addEventListener('click',async()=>{
             const code=document.getElementById('privateInviteCode').value.trim().toUpperCase(); if(!code)return alert('招待コードを入力してください');
             const {data,error}=await supabase.rpc('join_private_chat',{p_invite_code:code});
-            if(error)return alert('参加できませんでした: '+error.message);
+            if(error){
+                const msg = error.message || '';
+                if (msg.includes('function') || msg.includes('does not exist')) {
+                    return alert('プライベートチャット機能のSupabase設定が未完了です。\n\n同梱の private_chat_setup_v3.sql をSupabase SQL Editorで実行してください。');
+                }
+                return alert('参加できませんでした: ' + msg);
+            }
             const chat=Array.isArray(data)?data[0]:data;
             if(!chat?.id)return alert('有効なプライベートチャットが見つかりません');
             const saved={id:chat.id,title:chat.title,invite_code:code,creator_token:null,expires_at:chat.expires_at};
